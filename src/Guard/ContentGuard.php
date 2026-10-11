@@ -52,6 +52,9 @@ final class ContentGuard implements ContentGuardInterface
     {
         $warnings = [];
         $text = $this->toPlainText($text, ProductField::isSingleLine($field));
+        if (ProductField::META_KEYWORDS === $field) {
+            $text = $this->normalizeKeywords($text);
+        }
 
         $claims = $this->claimDetector->findUnsubstantiated($text, $facts->attributesText());
         foreach ($claims as $claim) {
