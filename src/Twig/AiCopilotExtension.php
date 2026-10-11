@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Tmonier\SyliusAiCatalogCopilotPlugin\Twig;
 
 use Sylius\Component\Core\Model\ProductInterface;
+use Tmonier\SyliusAiCatalogCopilotPlugin\DependencyInjection\Configuration;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
-use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\DemoTextGenerator;
+use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\PlatformTextGenerator;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Guard\EnvironmentalClaimDetector;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Model\ProductField;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Provenance\ProvenanceProviderInterface;
@@ -29,7 +30,7 @@ final class AiCopilotExtension extends AbstractExtension
     {
         return [
             new TwigFunction('tmonier_ai_copilot_fields', static fn (): array => ProductField::ALL),
-            new TwigFunction('tmonier_ai_copilot_is_demo', fn (): bool => DemoTextGenerator::TYPE === $this->generatorType),
+            new TwigFunction('tmonier_ai_copilot_is_demo', fn (): bool => PlatformTextGenerator::TYPE !== $this->generatorType && Configuration::GENERATOR_SERVICE !== $this->generatorType),
             new TwigFunction('tmonier_ai_copilot_source_locale', fn (): string => $this->sourceLocaleCode),
             new TwigFunction('tmonier_ai_copilot_pending_suggestions', $this->pendingSuggestions(...)),
             new TwigFunction('tmonier_ai_copilot_provenance', $this->provenance(...)),

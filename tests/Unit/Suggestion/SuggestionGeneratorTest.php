@@ -14,6 +14,7 @@ use Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Unit\FakeTextGenerator;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestion;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Facts\ProductFactsExtractor;
+use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\PlatformUnavailableException;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Guard\ContentGuard;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Guard\EnvironmentalClaimDetector;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Guard\FieldLimits;
@@ -115,6 +116,41 @@ final class SuggestionGeneratorTest extends TestCase
         }
     }
 
+    public function testAnUnavailablePlatformIsReportedWithoutLoggingTheException(): void
+    {
+        $logger = new class() extends \Psr\Log\AbstractLogger {
+            /** @var list<array<mixed>> */
+            public array $contexts = [];
+
+            public function log($level, string|\Stringable $message, array $context = []): void
+            {
+                $this->contexts[] = $context;
+            }
+        };
+        $generator = new class() implements \Tmonier\SyliusAiCatalogCopilotPlugin\Generator\TextGeneratorInterface {
+            public function generate(\Tmonier\SyliusAiCatalogCopilotPlugin\Generator\GenerationRequest $request): \Tmonier\SyliusAiCatalogCopilotPlugin\Generator\GeneratedText
+            {
+                throw new PlatformUnavailableException('The AI platform could not be created (EnvNotFoundException).');
+            }
+
+            public function getType(): string
+            {
+                return 'platform';
+            }
+        };
+
+        try {
+            $this->suggestionGenerator($generator, $logger)->generate($this->product(), ProductField::DESCRIPTION, 'en_US');
+            self::fail('No exception.');
+        } catch (SuggestionException $exception) {
+            self::assertSame('tmonier_ai_copilot.error.platform_unavailable', $exception->getMessage());
+        }
+
+        self::assertCount(1, $logger->contexts);
+        self::assertArrayNotHasKey('exception', $logger->contexts[0]);
+        self::assertSame(PlatformUnavailableException::class, $logger->contexts[0]['exception_class']);
+    }
+
     public function testATextEmptiedByTheGuardIsRefused(): void
     {
         $this->expectExceptionObject(new SuggestionException('tmonier_ai_copilot.error.empty_result'));
@@ -138,7 +174,7 @@ final class SuggestionGeneratorTest extends TestCase
         $generator->generate($this->product(), ProductField::DESCRIPTION, 'en_US', 'en_US');
     }
 
-    private function suggestionGenerator(FakeTextGenerator $textGenerator): SuggestionGenerator
+    private function suggestionGenerator(\Tmonier\SyliusAiCatalogCopilotPlugin\Generator\TextGeneratorInterface $textGenerator, ?\Psr\Log\LoggerInterface $logger = null): SuggestionGenerator
     {
         $repository = $this->createMock(AiSuggestionRepositoryInterface::class);
         $repository->method('findPendingFor')->willReturnCallback(fn (): array => $this->pending);
@@ -163,7 +199,7 @@ final class SuggestionGeneratorTest extends TestCase
             $repository,
             $entityManager,
             new MockClock('2026-10-11 10:00:00'),
-            new NullLogger(),
+            $logger ?? new NullLogger(),
             'en_US',
         );
     }

@@ -163,6 +163,14 @@ modified.
   `sylius_admin.product.update.content.form.sections.translations` (children name, slug,
   description, meta_keywords, meta_description, short_description; context `form`, `locale`),
   `sylius_admin.product.update.content` and the shop hook above.
+- Generator type may be an environment variable (`demo|platform`, resolved at runtime by
+  `SwitchableTextGenerator`; the platform is created lazily, so demo mode needs no credentials).
+  A platform that cannot be created (missing API key) gives a `platform_unavailable` flash.
+  `model_class` builds the model object directly, so model ids newer than the Symfony AI catalog
+  (0.14 has no `claude-haiku-5-5`) can be used. Failures are logged with class and message only,
+  never the exception object (trace arguments could carry headers). The test application wires
+  Anthropic with the bridge factory (`symfony/ai-anthropic-platform ^0.14`, v0.14.0, require-dev;
+  ai-bundle refuses dev-only platform packages) and defaults to demo; phpunit forces demo.
 - The demo fixture `tmonier_ai_copilot_demo_suggestions` always uses the demo generator, even when
   a platform is configured, so loading fixtures never calls an AI service.
 - Tests never call an AI service: a fake at the level of `TextGeneratorInterface` and the demo

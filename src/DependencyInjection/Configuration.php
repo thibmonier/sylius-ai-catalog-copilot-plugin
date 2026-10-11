@@ -40,9 +40,20 @@ final class Configuration implements ConfigurationInterface
                     ->info('Text generator. "demo" assembles texts from the product attributes without any AI call; "platform" uses a Symfony AI platform configured with symfony/ai-bundle; "service" uses your own TextGeneratorInterface service.')
                     ->addDefaultsIfNotSet()
                     ->children()
-                        ->enumNode('type')->values([self::GENERATOR_DEMO, self::GENERATOR_PLATFORM, self::GENERATOR_SERVICE])->defaultValue(self::GENERATOR_DEMO)->end()
+                        ->scalarNode('type')
+                            ->info('demo, platform or service; or an environment variable holding demo or platform, e.g. "%env(TMONIER_AI_GENERATOR)%", resolved at runtime.')
+                            ->defaultValue(self::GENERATOR_DEMO)
+                            ->validate()
+                                ->ifTrue(static fn (mixed $type): bool => !is_string($type) || (!self::isEnvPlaceholder($type) && !in_array($type, [self::GENERATOR_DEMO, self::GENERATOR_PLATFORM, self::GENERATOR_SERVICE], true)))
+                                ->thenInvalid('The generator type must be "demo", "platform", "service" or an environment variable, %s given.')
+                            ->end()
+                        ->end()
                         ->scalarNode('platform')->info('Service id of the Symfony AI platform, e.g. "ai.platform.mistral".')->defaultNull()->end()
                         ->scalarNode('model')->info('Model name, e.g. "mistral-small-latest".')->defaultNull()->end()
+                        ->scalarNode('model_class')
+                            ->info('Optional Symfony AI model class (e.g. Symfony\\AI\\Platform\\Bridge\\Anthropic\\Claude): the model is then used even when it is missing from the Symfony AI model catalog.')
+                            ->defaultNull()
+                        ->end()
                         ->arrayNode('options')
                             ->info('Options passed to the platform on each call, e.g. {temperature: 0.3}.')
                             ->normalizeKeys(false)
@@ -51,7 +62,7 @@ final class Configuration implements ConfigurationInterface
                         ->scalarNode('service')->info('Service id implementing TextGeneratorInterface (type "service").')->defaultNull()->end()
                     ->end()
                     ->validate()
-                        ->ifTrue(static fn (array $generator): bool => self::GENERATOR_PLATFORM === $generator['type'] && (empty($generator['platform']) || empty($generator['model'])))
+                        ->ifTrue(static fn (array $generator): bool => (self::GENERATOR_PLATFORM === $generator['type'] || self::isEnvPlaceholder($generator['type'])) && (empty($generator['platform']) || empty($generator['model'])))
                         ->thenInvalid('The "platform" generator needs both "platform" (service id) and "model".')
                     ->end()
                     ->validate()
@@ -126,6 +137,15 @@ final class Configuration implements ConfigurationInterface
         $this->addResourcesSection($rootNode);
 
         return $treeBuilder;
+    }
+
+    /**
+     * Environment variables are placeholders ("env_..._NAME_...") while the configuration is
+     * processed by load(), and raw "%env(NAME)%" strings in prepend().
+     */
+    public static function isEnvPlaceholder(mixed $value): bool
+    {
+        return is_string($value) && (str_starts_with($value, 'env_') || str_contains($value, '%env('));
     }
 
     private function addResourcesSection(ArrayNodeDefinition $node): void

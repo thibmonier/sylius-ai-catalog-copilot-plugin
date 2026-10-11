@@ -7,11 +7,13 @@ namespace Tmonier\SyliusAiCatalogCopilotPlugin\DependencyInjection;
 use Sylius\Bundle\CoreBundle\DependencyInjection\PrependDoctrineMigrationsTrait;
 use Sylius\Bundle\ResourceBundle\DependencyInjection\Extension\AbstractResourceExtension;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\Compiler\ServiceLocatorTagPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\PlatformTextGenerator;
+use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\SwitchableTextGenerator;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\TextGeneratorInterface;
 
 final class TmonierSyliusAiCatalogCopilotExtension extends AbstractResourceExtension implements PrependExtensionInterface
@@ -20,11 +22,12 @@ final class TmonierSyliusAiCatalogCopilotExtension extends AbstractResourceExten
 
     public function load(array $configs, ContainerBuilder $container): void
     {
-        /** @var array{generator: array{type: string, platform: ?string, model: ?string, options: array<string, mixed>, service: ?string}, source_locale: ?string, max_products_per_run: int, environmental_claims: array{mode: string, recognised_labels: array<string>, ecolabel_attributes: array<string>, biodegradable_attributes: array<string>}, limits: array<string, array{min?: int, max?: int}>, provenance: array{enabled: bool, shop_notice: bool}, driver: string, resources: array<string, mixed>} $config */
+        /** @var array{generator: array{type: string, platform: ?string, model: ?string, model_class: ?string, options: array<string, mixed>, service: ?string}, source_locale: ?string, max_products_per_run: int, environmental_claims: array{mode: string, recognised_labels: array<string>, ecolabel_attributes: array<string>, biodegradable_attributes: array<string>}, limits: array<string, array{min?: int, max?: int}>, provenance: array{enabled: bool, shop_notice: bool}, driver: string, resources: array<string, mixed>} $config */
         $config = $this->processConfiguration(new Configuration(), $configs);
 
         $this->registerResources('tmonier_ai_copilot', $config['driver'], $config['resources'], $container);
 
+        // An environment variable placeholder is resolved at runtime.
         $container->setParameter('tmonier_ai_copilot.generator_type', $config['generator']['type']);
         $container->setParameter('tmonier_ai_copilot.source_locale', $config['source_locale'] ?? '%locale%');
         $container->setParameter('tmonier_ai_copilot.max_products_per_run', $config['max_products_per_run']);
@@ -95,26 +98,42 @@ final class TmonierSyliusAiCatalogCopilotExtension extends AbstractResourceExten
     }
 
     /**
-     * @param array{type: string, platform: ?string, model: ?string, options: array<string, mixed>, service: ?string} $generator
+     * @param array{type: string, platform: ?string, model: ?string, model_class: ?string, options: array<string, mixed>, service: ?string} $generator
      */
     private function registerGenerator(array $generator, ContainerBuilder $container): void
     {
-        $generatorId = match ($generator['type']) {
-            Configuration::GENERATOR_PLATFORM => 'tmonier_ai_copilot.generator.platform',
-            Configuration::GENERATOR_SERVICE => (string) $generator['service'],
-            default => 'tmonier_ai_copilot.generator.demo',
-        };
-
-        if (Configuration::GENERATOR_PLATFORM === $generator['type']) {
+        $switchable = Configuration::isEnvPlaceholder($generator['type']);
+        if (Configuration::GENERATOR_PLATFORM === $generator['type'] || $switchable) {
             $container
                 ->register('tmonier_ai_copilot.generator.platform', PlatformTextGenerator::class)
                 ->setArguments([
                     new Reference((string) $generator['platform']),
                     (string) $generator['model'],
                     $generator['options'],
+                    $generator['model_class'],
                 ])
             ;
         }
+
+        if ($switchable) {
+            $container
+                ->register('tmonier_ai_copilot.generator.switchable', SwitchableTextGenerator::class)
+                ->setArguments([
+                    $generator['type'],
+                    new Reference('tmonier_ai_copilot.generator.demo'),
+                    ServiceLocatorTagPass::register($container, [
+                        PlatformTextGenerator::TYPE => new Reference('tmonier_ai_copilot.generator.platform'),
+                    ]),
+                ])
+            ;
+        }
+
+        $generatorId = match (true) {
+            $switchable => 'tmonier_ai_copilot.generator.switchable',
+            Configuration::GENERATOR_PLATFORM === $generator['type'] => 'tmonier_ai_copilot.generator.platform',
+            Configuration::GENERATOR_SERVICE === $generator['type'] => (string) $generator['service'],
+            default => 'tmonier_ai_copilot.generator.demo',
+        };
 
         $container->setAlias('tmonier_ai_copilot.generator', $generatorId);
         $container->setAlias(TextGeneratorInterface::class, 'tmonier_ai_copilot.generator');

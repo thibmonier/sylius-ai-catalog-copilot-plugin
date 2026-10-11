@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Unit\Generator;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\AI\Platform\Bridge\Anthropic\Claude;
 use Symfony\AI\Platform\Message\MessageBag;
 use Symfony\AI\Platform\Message\SystemMessage;
 use Symfony\AI\Platform\Message\UserMessage;
@@ -77,6 +78,22 @@ final class PlatformTextGeneratorTest extends TestCase
         $this->expectExceptionMessage('HTTP 401');
 
         (new PlatformTextGenerator($platform, 'claude-sonnet-5-5'))->generate($this->request());
+    }
+
+    public function testAModelClassLetsAModelMissingFromTheCatalogBeUsed(): void
+    {
+        $received = null;
+        $platform = new InMemoryPlatform(static function (Model $model) use (&$received): string {
+            $received = $model;
+
+            return 'A text.';
+        });
+
+        $generated = (new PlatformTextGenerator($platform, 'claude-haiku-5-5', [], Claude::class))->generate($this->request());
+
+        self::assertInstanceOf(Claude::class, $received);
+        self::assertSame('claude-haiku-5-5', $received->getName());
+        self::assertSame('claude-haiku-5-5', $generated->model);
     }
 
     public function testAnEmptyAnswerIsAFailure(): void

@@ -17,11 +17,33 @@ doctrine:
                         dir: '%kernel.project_dir%/../../../tests/TestApplication/src/Entity'
                         prefix: Tests\Tmonier\SyliusAiCatalogCopilotPlugin
 
-# The test application never calls an AI service: the deterministic demo generator is used.
-# See the README to plug a Symfony AI platform (Mistral, OpenAI, Anthropic, Ollama...).
+# Demo generator by default: no AI service is called (tests and CI force TMONIER_AI_GENERATOR=demo).
+# To try a real Claude model, see "Trying with a real model" in the README: set ANTHROPIC_API_KEY
+# and TMONIER_AI_GENERATOR=platform in tests/TestApplication/.env.local (gitignored).
+parameters:
+    env(TMONIER_AI_GENERATOR): demo
+    env(TMONIER_AI_MODEL): claude-haiku-5-5
+
+# Anthropic platform built with the bridge factory: symfony/ai-anthropic-platform is a dev
+# dependency of the plugin, and ai-bundle only accepts a platform package required in production.
+# An application configures it with ai-bundle instead (ai.platform.anthropic), see the README.
+services:
+    tmonier_ai_copilot.test_application.anthropic_platform:
+        class: Symfony\AI\Platform\Platform
+        factory: ['Symfony\AI\Platform\Bridge\Anthropic\Factory', 'createPlatform']
+        arguments:
+            $apiKey: '%env(ANTHROPIC_API_KEY)%'
+
 tmonier_sylius_ai_catalog_copilot:
     generator:
-        type: demo
+        type: '%env(TMONIER_AI_GENERATOR)%'
+        platform: tmonier_ai_copilot.test_application.anthropic_platform
+        model: '%env(TMONIER_AI_MODEL)%'
+        # Models newer than the Symfony AI 0.14 catalog (e.g. claude-haiku-5-5) are used as is.
+        model_class: Symfony\AI\Platform\Bridge\Anthropic\Claude
+        options:
+            max_tokens: 2000
+            temperature: 0.3
     provenance:
         shop_notice: true
 

@@ -8,6 +8,7 @@ tmonier_ai_copilot:
     bulk_rejected: "%count% suggestie(s) afgewezen."
     bulk_skipped: "%count% suggestie(s) overgeslagen: al beslist, of het product is sinds de generatie gewijzigd."
     error:
+        platform_unavailable: "Het AI-platform is niet geconfigureerd of kan niet worden aangemaakt: controleer de API-sleutel in de omgeving (bijv. ANTHROPIC_API_KEY) en leeg de cache. Er is niets gegenereerd."
         unknown_field: "Onbekend veld „%field%”."
         same_locale: "De bron- en doeltaal moeten verschillen."
         empty_source: "Niets te vertalen: het veld is leeg in %locale%."

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusAiCatalogCopilotPlugin\Generator;
 
+use Symfony\AI\Platform\Capability;
 use Symfony\AI\Platform\Message\Message;
 use Symfony\AI\Platform\Message\MessageBag;
+use Symfony\AI\Platform\Model;
 use Symfony\AI\Platform\PlatformInterface;
 use Symfony\AI\Platform\TokenUsage\TokenUsageInterface;
 
@@ -20,11 +22,14 @@ final class PlatformTextGenerator implements TextGeneratorInterface
     /**
      * @param non-empty-string $model
      * @param array<string, mixed> $options
+     * @param class-string<Model>|null $modelClass when set, the model is built with this class instead of
+     *                                              being looked up in the platform model catalog
      */
     public function __construct(
         private readonly PlatformInterface $platform,
         private readonly string $model,
         private readonly array $options = [],
+        private readonly ?string $modelClass = null,
     ) {
     }
 
@@ -36,7 +41,7 @@ final class PlatformTextGenerator implements TextGeneratorInterface
         );
 
         try {
-            $deferred = $this->platform->invoke($this->model, $messages, $this->options);
+            $deferred = $this->platform->invoke($this->model(), $messages, $this->options);
             $text = $deferred->asText();
             $tokenUsage = $deferred->getResult()->getMetadata()->get('token_usage');
         } catch (\Throwable $exception) {
@@ -53,6 +58,19 @@ final class PlatformTextGenerator implements TextGeneratorInterface
             $tokenUsage instanceof TokenUsageInterface ? $tokenUsage->getPromptTokens() : null,
             $tokenUsage instanceof TokenUsageInterface ? $tokenUsage->getCompletionTokens() : null,
         );
+    }
+
+    /** @return non-empty-string|Model */
+    private function model(): string|Model
+    {
+        if (null === $this->modelClass) {
+            return $this->model;
+        }
+        if (!is_a($this->modelClass, Model::class, true)) {
+            throw new GenerationFailedException(sprintf('The model class "%s" must extend "%s".', $this->modelClass, Model::class));
+        }
+
+        return new ($this->modelClass)($this->model, [Capability::INPUT_MESSAGES, Capability::OUTPUT_TEXT]);
     }
 
     public function getType(): string

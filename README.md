@@ -134,6 +134,16 @@ To use something else (a local model, a proxy, a company gateway), implement
 `Tmonier\SyliusAiCatalogCopilotPlugin\Generator\TextGeneratorInterface` and set
 `generator: { type: service, service: app.my_generator }`.
 
+Models newer than the Symfony AI model catalog of the installed minor (e.g. `claude-haiku-5-5`
+with Symfony AI 0.14) are refused by the platform: set `model_class` to the bridge model class
+(`Symfony\AI\Platform\Bridge\Anthropic\Claude` for Anthropic) to use any model id. The
+generator `type` can also be an environment variable (`'%env(TMONIER_AI_GENERATOR)%'`, value
+`demo` or `platform`), resolved at runtime; in `demo` mode the platform is never created. When the
+platform cannot be created (e.g. missing API key), the admin shows an error message and nothing is
+generated. API keys stay in environment variables: they are never stored in the database, shown
+in the admin, or written in the logs (failures are logged with the exception class and message
+only).
+
 ## Configuration
 
 ```yaml
@@ -300,6 +310,30 @@ vendor/bin/ecs check
 
 The test application uses the demo generator: no test, CI job or dev environment calls an AI
 service. The Symfony AI adapter is tested against Symfony AI's `InMemoryPlatform`.
+
+
+### Trying with a real model (Anthropic Claude)
+
+The test application is wired to Anthropic but uses the demo generator unless told otherwise
+(the tests and the CI always force the demo generator: no API call).
+
+1. Put these lines in `tests/TestApplication/.env.local` (gitignored, never commit it):
+
+    ```dotenv
+    ANTHROPIC_API_KEY=sk-ant-...
+    TMONIER_AI_GENERATOR=platform
+    # optional, default claude-haiku-5-5 (cheapest); claude-sonnet-5-5 for better wording
+    TMONIER_AI_MODEL=claude-haiku-5-5
+    ```
+
+2. Clear the cache: `vendor/bin/console cache:clear`.
+3. In the admin, generate or translate a field again (*Generate* / *Translate from* in the
+   product *Translations* tab), then review the pending suggestion.
+
+Each click is one paid API call (a few hundred to a few thousand tokens). Only catalog data is
+sent to Anthropic: product name and code, categories, attributes, options and, for a
+translation, the source text; never customer data. Remove the lines (or set
+`TMONIER_AI_GENERATOR=demo`) and clear the cache to go back to the demo generator.
 
 ## License
 

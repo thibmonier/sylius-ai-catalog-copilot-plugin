@@ -15,6 +15,7 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Facts\ProductFactsExtractorInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\GenerationFailedException;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\GenerationRequest;
+use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\PlatformUnavailableException;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\TextGeneratorInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Guard\ContentGuardInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Model\ProductField;
@@ -76,10 +77,11 @@ final class SuggestionGenerator implements SuggestionGeneratorInterface
                 'field' => $field,
                 'locale' => $localeCode,
                 'message' => $exception->getMessage(),
-                'exception' => $exception,
+                // No exception object: stack trace arguments could hold request headers (API key).
+                'exception_class' => ($exception->getPrevious() ?? $exception)::class,
             ]);
 
-            throw new SuggestionException('tmonier_ai_copilot.error.generation_failed', [], $exception);
+            throw new SuggestionException($exception instanceof PlatformUnavailableException ? 'tmonier_ai_copilot.error.platform_unavailable' : 'tmonier_ai_copilot.error.generation_failed', [], $exception);
         }
 
         $guarded = $this->contentGuard->apply($field, $generated->text, $facts);

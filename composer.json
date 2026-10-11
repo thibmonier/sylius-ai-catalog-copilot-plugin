@@ -30,6 +30,7 @@
         "phpunit/phpunit": "^10.5",
         "sylius-labs/coding-standard": "^4.4",
         "sylius/test-application": "^2.0.0@alpha",
+        "symfony/ai-anthropic-platform": "^0.14",
         "symfony/browser-kit": "^7.4 || ^8.0",
         "symfony/css-selector": "^7.4 || ^8.0",
         "symfony/debug-bundle": "^7.4 || ^8.0",

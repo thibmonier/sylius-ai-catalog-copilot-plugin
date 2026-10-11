@@ -32,6 +32,21 @@ final class ConfigurationTest extends TestCase
         $this->process(['generator' => ['type' => 'platform', 'platform' => 'ai.platform.mistral']]);
     }
 
+    public function testTheGeneratorTypeCanComeFromAnEnvironmentVariable(): void
+    {
+        $config = $this->process(['generator' => ['type' => '%env(TMONIER_AI_GENERATOR)%', 'platform' => 'ai.platform.anthropic', 'model' => '%env(TMONIER_AI_MODEL)%', 'model_class' => 'Symfony\AI\Platform\Bridge\Anthropic\Claude']]);
+        self::assertSame('%env(TMONIER_AI_GENERATOR)%', $config['generator']['type']);
+
+        $this->expectException(InvalidConfigurationException::class);
+        $this->process(['generator' => ['type' => '%env(TMONIER_AI_GENERATOR)%']]);
+    }
+
+    public function testAnUnknownGeneratorTypeIsRefused(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->process(['generator' => ['type' => 'openai']]);
+    }
+
     public function testTheServiceGeneratorNeedsAServiceId(): void
     {
         $this->expectException(InvalidConfigurationException::class);

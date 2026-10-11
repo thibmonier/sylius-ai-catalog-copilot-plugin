@@ -8,6 +8,7 @@ tmonier_ai_copilot:
     bulk_rejected: "%count% Vorschlag/Vorschläge abgelehnt."
     bulk_skipped: "%count% Vorschlag/Vorschläge übersprungen: bereits entschieden oder das Produkt wurde seit der Generierung geändert."
     error:
+        platform_unavailable: "Die KI-Plattform ist nicht konfiguriert oder kann nicht erstellt werden: prüfen Sie ihren API-Schlüssel in der Umgebung (z. B. ANTHROPIC_API_KEY) und leeren Sie den Cache. Es wurde nichts generiert."
         unknown_field: "Unbekanntes Feld „%field%“."
         same_locale: "Quell- und Zielsprache müssen sich unterscheiden."
         empty_source: "Nichts zu übersetzen: das Feld ist in %locale% leer."

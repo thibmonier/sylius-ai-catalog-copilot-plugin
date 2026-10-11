@@ -13,6 +13,9 @@
 
         <env name="APP_SECRET" value="''" />
         <env name="APP_ENV" value="test"/>
+        <!-- Never call an AI service from the tests. -->
+        <env name="TMONIER_AI_GENERATOR" value="demo" force="true"/>
+        <env name="ANTHROPIC_API_KEY" value="" force="true"/>
     </php>
 
     <testsuites>

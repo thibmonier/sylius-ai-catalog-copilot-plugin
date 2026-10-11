@@ -8,6 +8,7 @@ tmonier_ai_copilot:
     bulk_rejected: "%count% sugerencia(s) rechazada(s)."
     bulk_skipped: "%count% sugerencia(s) omitida(s): ya decidida(s) o el producto cambió desde la generación."
     error:
+        platform_unavailable: "La plataforma de IA no está configurada o no se puede crear: compruebe su clave de API en el entorno (p. ej. ANTHROPIC_API_KEY) y vacíe la caché. No se ha generado nada."
         unknown_field: "Campo desconocido «%field%»."
         same_locale: "Los idiomas de origen y destino deben ser distintos."
         empty_source: "Nada que traducir: el campo está vacío en %locale%."
