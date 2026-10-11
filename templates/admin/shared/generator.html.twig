@@ -1,0 +1,5 @@
+{% if suggestion.generator == 'demo' %}
+    <span class="badge bg-orange-lt" {{ sylius_test_html_attribute('tmonier-ai-copilot-demo-badge') }}>{{ 'tmonier_ai_copilot.ui.demo_generator'|trans }}</span>
+{% else %}
+    <code>{{ suggestion.model }}</code>
+{% endif %}

@@ -1,0 +1,6 @@
+{% for warning in warnings %}
+    <div class="text-warning small" {{ sylius_test_html_attribute('tmonier-ai-copilot-warning', warning.code) }}>
+        {{ ux_icon('tabler:alert-triangle', {'class': 'icon'}) }}
+        {{ ('tmonier_ai_copilot.warning.' ~ warning.code)|trans(warning.params|default({})|reduce((carry, value, key) => carry|merge({('%' ~ key ~ '%'): value}), {})) }}
+    </div>
+{% endfor %}

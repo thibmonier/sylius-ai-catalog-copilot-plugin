@@ -1,0 +1,9 @@
+Translate the {{ field|replace({'_': ' '}) }} of the product below from {{ source_language }} ({{ source_locale_code }}) to {{ language }} ({{ locale_code }}).
+Keep the meaning, the facts and the line breaks; do not add or remove information. Adapt the wording so it reads naturally for a native {{ language }} speaker.
+Answer with the translated text only.
+
+<source_text>
+{{ source_text }}
+</source_text>
+
+{% include '@TmonierSyliusAiCatalogCopilotPlugin/prompts/_facts.txt.twig' %}

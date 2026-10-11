@@ -1,0 +1,41 @@
+{% set suggestion = hookable_metadata.context.resource %}
+
+<div class="card mb-3" {{ sylius_test_html_attribute('tmonier-ai-copilot-details') }}>
+    <div class="card-header">
+        <div class="card-title">{{ 'sylius.ui.details'|trans }}</div>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-5">{{ 'sylius.ui.product'|trans }}</dt>
+            <dd class="col-7">
+                <a href="{{ path('sylius_admin_product_update', {'id': suggestion.product.id}) }}#tmonier-ai-copilot">{{ suggestion.product.translations[suggestion.localeCode].name|default(suggestion.product.code) }}</a>
+            </dd>
+            <dt class="col-5">{{ 'sylius.ui.locale'|trans }}</dt>
+            <dd class="col-7">{{ suggestion.localeCode }}</dd>
+            <dt class="col-5">{{ 'tmonier_ai_copilot.ui.field'|trans }}</dt>
+            <dd class="col-7">{% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/field_label.html.twig' %}</dd>
+            <dt class="col-5">{{ 'sylius.ui.state'|trans }}</dt>
+            <dd class="col-7">{% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/status.html.twig' with { status: suggestion.status } only %}</dd>
+            <dt class="col-5">{{ 'tmonier_ai_copilot.ui.model'|trans }}</dt>
+            <dd class="col-7">{% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/generator.html.twig' %}</dd>
+            {% if suggestion.inputTokens is not null or suggestion.outputTokens is not null %}
+                <dt class="col-5">{{ 'tmonier_ai_copilot.ui.tokens'|trans }}</dt>
+                <dd class="col-7">{{ suggestion.inputTokens|default('-') }} / {{ suggestion.outputTokens|default('-') }}</dd>
+            {% endif %}
+            <dt class="col-5">{{ 'tmonier_ai_copilot.ui.prompt_hash'|trans }}</dt>
+            <dd class="col-7"><code title="{{ suggestion.promptHash }}">{{ suggestion.promptHash|slice(0, 12) }}</code></dd>
+            <dt class="col-5">{{ 'tmonier_ai_copilot.ui.requested'|trans }}</dt>
+            <dd class="col-7">
+                {{ suggestion.createdAt|format_datetime('medium', 'short') }}
+                {% if suggestion.requestedBy is not null %}<div class="text-secondary">{{ suggestion.requestedBy.username }}</div>{% endif %}
+            </dd>
+            {% if suggestion.decidedAt is not null %}
+                <dt class="col-5">{{ 'tmonier_ai_copilot.ui.decided'|trans }}</dt>
+                <dd class="col-7">
+                    {{ suggestion.decidedAt|format_datetime('medium', 'short') }}
+                    {% if suggestion.decidedBy is not null %}<div class="text-secondary">{{ suggestion.decidedBy.username }}</div>{% endif %}
+                </dd>
+            {% endif %}
+        </dl>
+    </div>
+</div>

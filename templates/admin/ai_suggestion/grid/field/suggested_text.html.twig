@@ -1,0 +1,7 @@
+<div class="text-wrap" style="max-width: 40rem" {{ sylius_test_html_attribute('tmonier-ai-copilot-suggested-text', data.id) }}>
+    {{ data.suggestedText|u.truncate(240, '…', false) }}
+</div>
+{% if data.translation %}
+    <div class="text-secondary small">{{ 'tmonier_ai_copilot.ui.translated_from'|trans({'%locale%': data.sourceLocaleCode}) }}</div>
+{% endif %}
+{% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/warnings.html.twig' with { warnings: data.warnings } only %}

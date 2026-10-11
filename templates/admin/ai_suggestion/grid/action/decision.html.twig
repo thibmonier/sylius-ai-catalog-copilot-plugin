@@ -1,0 +1,11 @@
+{# Item action "tmonier_ai_copilot_decision": accept or reject (options.decision) a pending suggestion. #}
+{% if data.pending %}
+    {% set accept = options.decision == 'accept' %}
+    <form method="post" action="{{ path('tmonier_ai_copilot_admin_ai_suggestion_decide', {'id': data.id, 'decision': options.decision}) }}" class="d-inline m-0">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('tmonier_ai_copilot_decide') }}">
+        <input type="hidden" name="_redirect" value="{{ app.request.requestUri }}">
+        <button type="submit" class="btn btn-icon {{ accept ? 'btn-ghost-success' : 'btn-ghost-danger' }}" data-bs-toggle="tooltip" data-bs-title="{{ action.label|trans }}" {{ sylius_test_html_attribute('tmonier-ai-copilot-' ~ options.decision, data.id) }}>
+            {{ ux_icon(accept ? 'tabler:check' : 'tabler:x') }}
+        </button>
+    </form>
+{% endif %}

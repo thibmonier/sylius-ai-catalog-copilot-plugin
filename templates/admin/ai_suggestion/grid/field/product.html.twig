@@ -1,0 +1,5 @@
+{% set product = data.product %}
+<a href="{{ path('sylius_admin_product_update', {'id': product.id}) }}#tmonier-ai-copilot" {{ sylius_test_html_attribute('tmonier-ai-copilot-product', product.code) }}>
+    {{ product.translations[data.localeCode].name|default(product.name|default(product.code)) }}
+</a>
+<div class="text-secondary small">{{ product.code }}</div>

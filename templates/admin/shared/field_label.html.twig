@@ -1,0 +1,6 @@
+{{ ('tmonier_ai_copilot.field.' ~ suggestion.field)|trans }}
+{% if suggestion.translation %}
+    <div class="text-secondary small" {{ sylius_test_html_attribute('tmonier-ai-copilot-translated-from', suggestion.sourceLocaleCode) }}>
+        {{ 'tmonier_ai_copilot.ui.translated_from'|trans({'%locale%': suggestion.sourceLocaleCode}) }}
+    </div>
+{% endif %}

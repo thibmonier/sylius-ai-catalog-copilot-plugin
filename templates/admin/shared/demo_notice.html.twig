@@ -1,0 +1,17 @@
+{#
+    Shown on every copilot page while the deterministic demo generator is configured: its
+    suggestions are assembled from the product attributes, no AI service is called.
+#}
+{% if tmonier_ai_copilot_is_demo() %}
+    {% if hookable_metadata.configuration.container|default(false) %}<div class="container-xl">{% endif %}
+    <div class="alert alert-warning mb-3" role="alert" {{ sylius_test_html_attribute('tmonier-ai-copilot-demo-notice') }}>
+        <div class="d-flex gap-2">
+            {{ ux_icon('tabler:flask', {'class': 'icon alert-icon'}) }}
+            <div>
+                <strong>{{ 'tmonier_ai_copilot.ui.demo_generator'|trans }}</strong>
+                <div class="text-secondary">{{ 'tmonier_ai_copilot.ui.demo_generator_help'|trans }}</div>
+            </div>
+        </div>
+    </div>
+    {% if hookable_metadata.configuration.container|default(false) %}</div>{% endif %}
+{% endif %}

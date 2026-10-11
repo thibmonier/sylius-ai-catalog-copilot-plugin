@@ -1,0 +1,54 @@
+{#
+    AI copilot toolbar at the end of each locale of the product translations. The buttons
+    submit the "tmonier-ai-copilot-generate" form rendered after the product form (forms
+    cannot be nested): the product form, a Live Component, is never modified client-side.
+#}
+{% set form = hookable_metadata.context.form %}
+{% set locale = hookable_metadata.context.locale %}
+{% set translation = form.vars.data|default(null) %}
+{% set product = hookable_metadata.context.resource|default(translation.translatable|default(null)) %}
+{% set source_locale = tmonier_ai_copilot_source_locale() %}
+
+{% if product is not null and product.id is not null %}
+    <div class="col-12 mb-3" {{ sylius_test_html_attribute('tmonier-ai-copilot-toolbar', locale) }}>
+        <div class="d-flex flex-wrap align-items-center gap-2 border-top pt-3">
+            <span class="text-secondary">{{ ux_icon('tabler:sparkles', {'class': 'icon'}) }} {{ 'tmonier_ai_copilot.ui.copilot'|trans }}</span>
+            {% if translation is null or translation.id is null %}
+                <span class="text-secondary small" {{ sylius_test_html_attribute('tmonier-ai-copilot-save-first') }}>{{ 'tmonier_ai_copilot.ui.save_translation_first'|trans }}</span>
+            {% else %}
+                <div class="dropdown">
+                    <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" {{ sylius_test_html_attribute('tmonier-ai-copilot-generate-menu', locale) }}>
+                        {{ 'tmonier_ai_copilot.ui.generate'|trans }}
+                    </button>
+                    <div class="dropdown-menu">
+                        {% for field in tmonier_ai_copilot_fields() %}
+                            <button type="submit" form="tmonier-ai-copilot-generate" name="target" value="{{ field ~ '|' ~ locale }}" class="dropdown-item" {{ sylius_test_html_attribute('tmonier-ai-copilot-generate', field ~ '|' ~ locale) }}>
+                                {{ ('tmonier_ai_copilot.field.' ~ field)|trans }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if locale != source_locale %}
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-sm dropdown-toggle" data-bs-toggle="dropdown" {{ sylius_test_html_attribute('tmonier-ai-copilot-translate-menu', locale) }}>
+                            {{ 'tmonier_ai_copilot.ui.translate_from'|trans({'%locale%': source_locale|sylius_locale_name}) }}
+                        </button>
+                        <div class="dropdown-menu">
+                            {% for field in tmonier_ai_copilot_fields() %}
+                                <button type="submit" form="tmonier-ai-copilot-generate" name="target" value="{{ field ~ '|' ~ locale ~ '|' ~ source_locale }}" class="dropdown-item" {{ sylius_test_html_attribute('tmonier-ai-copilot-translate', field ~ '|' ~ locale) }}>
+                                    {{ ('tmonier_ai_copilot.field.' ~ field)|trans }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                {% for field, provenance in tmonier_ai_copilot_all_provenances(product, locale) %}
+                    <span class="badge {{ provenance.aiGenerated ? 'bg-purple-lt' : 'bg-secondary-lt' }}" title="{{ provenance.model }} - {{ provenance.generatedAt|format_datetime('medium', 'short') }}" {{ sylius_test_html_attribute('tmonier-ai-copilot-provenance', field ~ '|' ~ locale) }}>
+                        {{ ('tmonier_ai_copilot.field.' ~ field)|trans }}: {{ ('tmonier_ai_copilot.provenance.' ~ provenance.status)|trans }}
+                    </span>
+                {% endfor %}
+                <span class="text-secondary small">{{ 'tmonier_ai_copilot.ui.unsaved_changes_lost'|trans }}</span>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}

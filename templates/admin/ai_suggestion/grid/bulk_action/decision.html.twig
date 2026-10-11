@@ -1,0 +1,14 @@
+{#
+    Bulk action "tmonier_ai_copilot_decision": accept or reject (options.decision) the selected
+    suggestions. The form reuses the "data-bulk-delete" script of the Sylius admin, which copies
+    the checked rows into "ids[]" inputs on submit.
+#}
+{% set accept = action.options.decision == 'accept' %}
+<form method="post" action="{{ path('tmonier_ai_copilot_admin_ai_suggestion_bulk_decide', {'decision': action.options.decision}) }}" data-bulk-delete="index" class="d-inline m-0">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token('tmonier_ai_copilot_decide') }}">
+    <input type="hidden" name="_redirect" value="{{ app.request.requestUri }}">
+    <button type="submit" class="btn {{ accept ? 'btn-success' : 'btn-outline-danger' }}" data-check-all-action="index" disabled {{ sylius_test_html_attribute('tmonier-ai-copilot-bulk-' ~ action.options.decision) }}>
+        {{ ux_icon(accept ? 'tabler:checks' : 'tabler:x', {'class': 'icon'}) }}
+        {{ action.label|trans }}
+    </button>
+</form>

@@ -1,0 +1,12 @@
+{#
+    Optional shop notice (tmonier_sylius_ai_catalog_copilot.provenance.shop_notice): tells the
+    customer that the description was written with AI, with machine-readable data attributes.
+#}
+{% set product = hookable_metadata.context.product|default(null) %}
+{% set provenance = tmonier_ai_copilot_provenance(product, 'description') %}
+
+{% if provenance is not null and provenance.aiGenerated %}
+    <p class="small text-body-tertiary mt-2 mb-0" {{ tmonier_ai_copilot_provenance_attributes(product, 'description') }} {{ sylius_test_html_attribute('tmonier-ai-copilot-shop-notice') }}>
+        {{ 'tmonier_ai_copilot.shop.ai_generated_description'|trans }}
+    </p>
+{% endif %}

@@ -1,0 +1,28 @@
+{% set suggestion = hookable_metadata.context.resource %}
+
+<div class="card mb-3" {{ sylius_test_html_attribute('tmonier-ai-copilot-comparison') }}>
+    <div class="card-header">
+        <div class="card-title">{{ 'tmonier_ai_copilot.ui.suggestion'|trans }}</div>
+        <div class="card-actions">
+            {% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/decision_forms.html.twig' with { suggestion, redirect: app.request.requestUri } only %}
+        </div>
+    </div>
+    <div class="card-body">
+        {% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/warnings.html.twig' with { warnings: suggestion.warnings } only %}
+        <div class="row g-3 mt-0">
+            <div class="col-12 col-md-6">
+                <h4 class="text-secondary">{{ 'tmonier_ai_copilot.ui.current_text'|trans }}</h4>
+                {% if suggestion.originalText is empty %}
+                    <p class="text-secondary fst-italic">{{ 'tmonier_ai_copilot.ui.empty'|trans }}</p>
+                {% else %}
+                    <p {{ sylius_test_html_attribute('tmonier-ai-copilot-original-text') }}>{{ suggestion.originalText|nl2br }}</p>
+                {% endif %}
+            </div>
+            <div class="col-12 col-md-6">
+                <h4 class="text-secondary">{{ 'tmonier_ai_copilot.ui.suggested_text'|trans }}</h4>
+                <p {{ sylius_test_html_attribute('tmonier-ai-copilot-suggestion-text') }}>{{ suggestion.suggestedText|nl2br }}</p>
+                <div class="text-secondary small">{{ 'tmonier_ai_copilot.ui.characters'|trans({'%count%': suggestion.suggestedText|length}) }}</div>
+            </div>
+        </div>
+    </div>
+</div>

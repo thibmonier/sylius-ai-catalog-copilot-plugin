@@ -1,0 +1,37 @@
+imports:
+    - { resource: "@TmonierSyliusAiCatalogCopilotPlugin/config/config.yaml" }
+
+twig:
+    paths:
+        '%kernel.project_dir%/../../../tests/TestApplication/templates': ~
+
+# Remove if you do not need to extend entities
+doctrine:
+    orm:
+        entity_managers:
+            default:
+                mappings:
+                    TestApplication:
+                        is_bundle: false
+                        type: attribute
+                        dir: '%kernel.project_dir%/../../../tests/TestApplication/src/Entity'
+                        prefix: Tests\Tmonier\SyliusAiCatalogCopilotPlugin
+
+# The test application never calls an AI service: the deterministic demo generator is used.
+# See the README to plug a Symfony AI platform (Mistral, OpenAI, Anthropic, Ollama...).
+tmonier_sylius_ai_catalog_copilot:
+    generator:
+        type: demo
+    provenance:
+        shop_notice: true
+
+sylius_fixtures:
+    suites:
+        default:
+            fixtures:
+                tmonier_ai_copilot_demo_suggestions:
+                    priority: -1000
+                    options:
+                        products: 6
+                        locale: en_US
+                        translation_locale: fr_FR

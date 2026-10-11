@@ -1,0 +1,8 @@
+# Import this file from your application's config/routes:
+#
+# tmonier_sylius_ai_catalog_copilot:
+#     resource: "@TmonierSyliusAiCatalogCopilotPlugin/config/routes.yaml"
+
+tmonier_ai_copilot_admin:
+    resource: "@TmonierSyliusAiCatalogCopilotPlugin/config/routes/admin.yaml"
+    prefix: '/%sylius_admin.path_name%'

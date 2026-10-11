@@ -1,0 +1,21 @@
+<product_facts>
+Product name: {{ facts.name }}
+Product code: {{ facts.code }}
+{% if facts.taxons is not empty %}
+Categories: {{ facts.taxons|join(', ') }}
+{% endif %}
+{% if facts.attributes is not empty %}
+Attributes:
+{% for attribute in facts.attributes %}
+- {{ attribute.name }}: {{ attribute.value }}
+{% endfor %}
+{% else %}
+Attributes: none
+{% endif %}
+{% if facts.options is not empty %}
+Available options:
+{% for option in facts.options %}
+- {{ option.name }}: {{ option.values|join(', ') }}
+{% endfor %}
+{% endif %}
+</product_facts>

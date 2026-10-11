@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping">
+
+    <mapped-superclass name="Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestion" table="tmonier_ai_copilot_suggestion">
+        <indexes>
+            <index name="tmonier_ai_copilot_suggestion_status_idx" columns="status,created_at" />
+            <index name="tmonier_ai_copilot_suggestion_target_idx" columns="product_id,locale_code,field,status" />
+        </indexes>
+
+        <id name="id" column="id" type="integer">
+            <generator strategy="AUTO" />
+        </id>
+
+        <field name="localeCode" column="locale_code" type="string" length="12" />
+        <field name="field" column="field" type="string" length="32" />
+        <field name="sourceLocaleCode" column="source_locale_code" type="string" length="12" nullable="true" />
+        <field name="originalText" column="original_text" type="text" nullable="true" />
+        <field name="suggestedText" column="suggested_text" type="text" />
+        <field name="status" column="status" type="string" length="16" />
+        <field name="generator" column="generator" type="string" length="32" />
+        <field name="model" column="model" type="string" length="128" />
+        <field name="promptHash" column="prompt_hash" type="string" length="64" />
+        <field name="inputTokens" column="input_tokens" type="integer" nullable="true" />
+        <field name="outputTokens" column="output_tokens" type="integer" nullable="true" />
+        <field name="warnings" column="warnings" type="json" />
+        <field name="createdAt" column="created_at" type="datetime_immutable" />
+        <field name="decidedAt" column="decided_at" type="datetime_immutable" nullable="true" />
+
+        <many-to-one field="product" target-entity="Sylius\Component\Core\Model\ProductInterface">
+            <join-column name="product_id" referenced-column-name="id" nullable="false" on-delete="CASCADE" />
+        </many-to-one>
+
+        <many-to-one field="requestedBy" target-entity="Sylius\Component\Core\Model\AdminUserInterface">
+            <join-column name="requested_by_id" referenced-column-name="id" nullable="true" on-delete="SET NULL" />
+        </many-to-one>
+
+        <many-to-one field="decidedBy" target-entity="Sylius\Component\Core\Model\AdminUserInterface">
+            <join-column name="decided_by_id" referenced-column-name="id" nullable="true" on-delete="SET NULL" />
+        </many-to-one>
+    </mapped-superclass>
+
+</doctrine-mapping>

@@ -1,0 +1,4 @@
+{% set colors = { pending: 'bg-yellow-lt', accepted: 'bg-green-lt', rejected: 'bg-secondary-lt' } %}
+<span class="badge {{ colors[status]|default('bg-secondary-lt') }}" {{ sylius_test_html_attribute('tmonier-ai-copilot-status', status) }}>
+    {{ ('tmonier_ai_copilot.status.' ~ status)|trans }}
+</span>

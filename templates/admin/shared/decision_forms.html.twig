@@ -1,0 +1,21 @@
+{# Accept / reject buttons of a pending suggestion. "redirect" is the page to come back to. #}
+{% if suggestion.pending %}
+    <div class="d-inline-flex gap-1">
+        <form method="post" action="{{ path('tmonier_ai_copilot_admin_ai_suggestion_decide', {'id': suggestion.id, 'decision': 'accept'}) }}" class="d-inline m-0">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('tmonier_ai_copilot_decide') }}">
+            <input type="hidden" name="_redirect" value="{{ redirect }}">
+            <button type="submit" class="btn btn-sm btn-success" {{ sylius_test_html_attribute('tmonier-ai-copilot-accept', suggestion.id) }}>
+                {{ ux_icon('tabler:check', {'class': 'icon'}) }}
+                {{ 'tmonier_ai_copilot.ui.accept'|trans }}
+            </button>
+        </form>
+        <form method="post" action="{{ path('tmonier_ai_copilot_admin_ai_suggestion_decide', {'id': suggestion.id, 'decision': 'reject'}) }}" class="d-inline m-0">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('tmonier_ai_copilot_decide') }}">
+            <input type="hidden" name="_redirect" value="{{ redirect }}">
+            <button type="submit" class="btn btn-sm btn-outline-danger" {{ sylius_test_html_attribute('tmonier-ai-copilot-reject', suggestion.id) }}>
+                {{ ux_icon('tabler:x', {'class': 'icon'}) }}
+                {{ 'tmonier_ai_copilot.ui.reject'|trans }}
+            </button>
+        </form>
+    </div>
+{% endif %}

@@ -1,0 +1,65 @@
+{#
+    "AI suggestions" card after the product form: the target form of the copilot toolbar
+    buttons, and the pending suggestions of the product with accept / reject buttons.
+#}
+{% set product = hookable_metadata.context.resource|default(null) %}
+
+{% if product is not null and product.id is not null %}
+    {% set suggestions = tmonier_ai_copilot_pending_suggestions(product) %}
+    {% set redirect = path('sylius_admin_product_update', {'id': product.id}) ~ '#tmonier-ai-copilot' %}
+    <div class="container-xl mt-3">
+        <form id="tmonier-ai-copilot-generate" method="post" action="{{ path('tmonier_ai_copilot_admin_product_generate', {'id': product.id}) }}" class="d-none">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('tmonier_ai_copilot_generate') }}">
+        </form>
+        {% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/demo_notice.html.twig' %}
+        <div class="card mb-3" id="tmonier-ai-copilot" {{ sylius_test_html_attribute('tmonier-ai-copilot-card') }}>
+            <div class="card-header">
+                <div class="card-title">
+                    {{ ux_icon('tabler:sparkles', {'class': 'icon'}) }}
+                    {{ 'tmonier_ai_copilot.ui.pending_suggestions'|trans }}
+                </div>
+                <div class="card-actions">
+                    <a href="{{ path('tmonier_ai_copilot_admin_ai_suggestion_index', {'criteria': {'product': {'value': product.code}}}) }}" class="btn btn-sm">
+                        {{ 'tmonier_ai_copilot.ui.all_suggestions'|trans }}
+                    </a>
+                </div>
+            </div>
+            {% if suggestions is empty %}
+                <div class="card-body">
+                    <p class="text-secondary mb-0" {{ sylius_test_html_attribute('tmonier-ai-copilot-no-pending') }}>{{ 'tmonier_ai_copilot.ui.no_pending_suggestions'|trans }}</p>
+                </div>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                            <tr>
+                                <th>{{ 'sylius.ui.locale'|trans }}</th>
+                                <th>{{ 'tmonier_ai_copilot.ui.field'|trans }}</th>
+                                <th>{{ 'tmonier_ai_copilot.ui.suggestion'|trans }}</th>
+                                <th>{{ 'tmonier_ai_copilot.ui.model'|trans }}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for suggestion in suggestions %}
+                                <tr {{ sylius_test_html_attribute('tmonier-ai-copilot-pending', suggestion.id) }}>
+                                    <td class="text-nowrap">{{ suggestion.localeCode }}</td>
+                                    <td class="text-nowrap">{% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/field_label.html.twig' %}</td>
+                                    <td>
+                                        <div class="text-wrap">{{ suggestion.suggestedText|nl2br }}</div>
+                                        {% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/warnings.html.twig' with { warnings: suggestion.warnings } only %}
+                                    </td>
+                                    <td class="text-nowrap">{% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/generator.html.twig' %}</td>
+                                    <td class="text-end text-nowrap">
+                                        <a href="{{ path('tmonier_ai_copilot_admin_ai_suggestion_show', {'id': suggestion.id}) }}" class="btn btn-sm btn-ghost-secondary">{{ 'tmonier_ai_copilot.ui.compare'|trans }}</a>
+                                        {% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/decision_forms.html.twig' with { suggestion, redirect } only %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}

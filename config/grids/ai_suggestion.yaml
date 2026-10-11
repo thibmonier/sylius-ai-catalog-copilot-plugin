@@ -1,0 +1,135 @@
+sylius_grid:
+    templates:
+        bulk_action:
+            tmonier_ai_copilot_decision: '@TmonierSyliusAiCatalogCopilotPlugin/admin/ai_suggestion/grid/bulk_action/decision.html.twig'
+        action:
+            tmonier_ai_copilot_decision: '@TmonierSyliusAiCatalogCopilotPlugin/admin/ai_suggestion/grid/action/decision.html.twig'
+
+    grids:
+        tmonier_ai_copilot_admin_ai_suggestion:
+            driver:
+                name: doctrine/orm
+                options:
+                    class: "%tmonier_ai_copilot.model.ai_suggestion.class%"
+                    repository:
+                        method: createListQueryBuilder
+            sorting:
+                createdAt: desc
+            fields:
+                product:
+                    type: twig
+                    label: sylius.ui.product
+                    path: .
+                    sortable: product.code
+                    options:
+                        template: "@TmonierSyliusAiCatalogCopilotPlugin/admin/ai_suggestion/grid/field/product.html.twig"
+                localeCode:
+                    type: twig
+                    label: sylius.ui.locale
+                    path: .
+                    sortable: ~
+                    options:
+                        template: "@TmonierSyliusAiCatalogCopilotPlugin/admin/ai_suggestion/grid/field/locale.html.twig"
+                        vars:
+                            th_class: "w-1"
+                field:
+                    type: twig
+                    label: tmonier_ai_copilot.ui.field
+                    sortable: ~
+                    options:
+                        template: "@TmonierSyliusAiCatalogCopilotPlugin/admin/ai_suggestion/grid/field/field.html.twig"
+                        vars:
+                            th_class: "w-1"
+                suggestedText:
+                    type: twig
+                    label: tmonier_ai_copilot.ui.suggestion
+                    path: .
+                    options:
+                        template: "@TmonierSyliusAiCatalogCopilotPlugin/admin/ai_suggestion/grid/field/suggested_text.html.twig"
+                        vars:
+                            th_class: "w-50"
+                status:
+                    type: twig
+                    label: sylius.ui.state
+                    sortable: ~
+                    options:
+                        template: "@TmonierSyliusAiCatalogCopilotPlugin/admin/ai_suggestion/grid/field/status.html.twig"
+                        vars:
+                            th_class: "w-1"
+                model:
+                    type: twig
+                    label: tmonier_ai_copilot.ui.model
+                    path: .
+                    sortable: ~
+                    options:
+                        template: "@TmonierSyliusAiCatalogCopilotPlugin/admin/ai_suggestion/grid/field/model.html.twig"
+                        vars:
+                            th_class: "w-1"
+                createdAt:
+                    type: twig
+                    label: sylius.ui.date
+                    sortable: ~
+                    options:
+                        template: "@SyliusAdmin/shared/grid/field/date.html.twig"
+                        vars:
+                            th_class: "w-1 text-center"
+            filters:
+                status:
+                    type: select
+                    label: sylius.ui.state
+                    form_options:
+                        choices:
+                            tmonier_ai_copilot.status.pending: pending
+                            tmonier_ai_copilot.status.accepted: accepted
+                            tmonier_ai_copilot.status.rejected: rejected
+                field:
+                    type: select
+                    label: tmonier_ai_copilot.ui.field
+                    form_options:
+                        choices:
+                            tmonier_ai_copilot.field.description: description
+                            tmonier_ai_copilot.field.short_description: short_description
+                            tmonier_ai_copilot.field.meta_description: meta_description
+                            tmonier_ai_copilot.field.meta_keywords: meta_keywords
+                product:
+                    type: string
+                    label: sylius.ui.product
+                    options:
+                        fields: [product.code, product.translations.name]
+                    form_options:
+                        type: !php/const Sylius\Component\Grid\Filter\StringFilter::TYPE_CONTAINS
+                localeCode:
+                    type: string
+                    label: sylius.ui.locale
+                    form_options:
+                        type: !php/const Sylius\Component\Grid\Filter\StringFilter::TYPE_EQUAL
+            actions:
+                item:
+                    show:
+                        type: show
+                        options:
+                            link:
+                                route: tmonier_ai_copilot_admin_ai_suggestion_show
+                                parameters:
+                                    id: resource.id
+                    accept:
+                        type: tmonier_ai_copilot_decision
+                        label: tmonier_ai_copilot.ui.accept
+                        options:
+                            decision: accept
+                    reject:
+                        type: tmonier_ai_copilot_decision
+                        label: tmonier_ai_copilot.ui.reject
+                        options:
+                            decision: reject
+                bulk:
+                    accept:
+                        type: tmonier_ai_copilot_decision
+                        label: tmonier_ai_copilot.ui.accept_selected
+                        options:
+                            decision: accept
+                    reject:
+                        type: tmonier_ai_copilot_decision
+                        label: tmonier_ai_copilot.ui.reject_selected
+                        options:
+                            decision: reject

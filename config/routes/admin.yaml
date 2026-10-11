@@ -1,0 +1,51 @@
+tmonier_ai_copilot_admin_ai_suggestion_index:
+    path: /ai-suggestions/
+    methods: [GET]
+    defaults:
+        _controller: tmonier_ai_copilot.controller.ai_suggestion::indexAction
+        _sylius:
+            section: admin
+            permission: true
+            template: "@SyliusAdmin/shared/crud/index.html.twig"
+            grid: tmonier_ai_copilot_admin_ai_suggestion
+            vars:
+                hook_prefix: tmonier_ai_copilot.admin.ai_suggestion
+
+tmonier_ai_copilot_admin_ai_suggestion_show:
+    path: /ai-suggestions/{id}
+    methods: [GET]
+    requirements:
+        id: '\d+'
+    defaults:
+        _controller: tmonier_ai_copilot.controller.ai_suggestion::showAction
+        _sylius:
+            section: admin
+            permission: true
+            template: "@SyliusAdmin/shared/crud/show.html.twig"
+            vars:
+                hook_prefix: tmonier_ai_copilot.admin.ai_suggestion
+
+tmonier_ai_copilot_admin_ai_suggestion_decide:
+    path: /ai-suggestions/{id}/{decision}
+    methods: [POST]
+    requirements:
+        id: '\d+'
+        decision: 'accept|reject'
+    defaults:
+        _controller: tmonier_ai_copilot.controller.admin.suggestion::decideAction
+
+tmonier_ai_copilot_admin_ai_suggestion_bulk_decide:
+    path: /ai-suggestions/bulk/{decision}
+    methods: [POST]
+    requirements:
+        decision: 'accept|reject'
+    defaults:
+        _controller: tmonier_ai_copilot.controller.admin.suggestion::bulkDecideAction
+
+tmonier_ai_copilot_admin_product_generate:
+    path: /products/{id}/ai-suggestions/generate
+    methods: [POST]
+    requirements:
+        id: '\d+'
+    defaults:
+        _controller: tmonier_ai_copilot.controller.admin.suggestion::generateAction
