@@ -231,13 +231,19 @@ Both are optional: this plugin depends on neither.
   performance (EU Ecolabel, an EN ISO 14024 type I ecolabel...), and claims of climate
   neutrality based on offsetting are banned. The prompts forbid such claims and the content
   guard removes the unsubstantiated ones in seven languages (stems with their inflections).
-  A generic claim is kept only when one of the `ecolabel_attributes` has a positive value naming
-  a recognised label (e.g. *Certification: EU Ecolabel*; "no", "none", "pending"... never count),
-  "biodegradable" only when one of the `biodegradable_attributes` has a positive value; carbon or
-  climate neutrality and offsetting claims are always removed. Colour words ("green", "vert",
-  "grün"...) count as claims unless an attribute gives that colour. A kept claim is shown to the
-  reviewer with the attribute that supports it. This is a keyword list, not an understanding of
-  the text: review every suggestion. National
+  A generic claim is kept only when one of the `ecolabel_attributes` names a recognised label
+  (e.g. *Certification: EU Ecolabel*) and the value contains no denying, expiry or pending word
+  ("no", "not", "expired", "candidate", "pending", "abgelaufen"...); "biodegradable" or
+  "compostable" only when one of the `biodegradable_attributes` starts with an explicit "yes"
+  (oui, ja, sí, tak, certified...) or names a compostability standard (EN 13432...). Carbon or
+  climate neutrality, net zero and offsetting claims are always removed. Colour words are claims
+  only in eco phrases ("green product", "greener", "produit vert"), never as plain colour
+  adjectives, and not when the product name, attributes or option values give that colour.
+  OEKO-TEX is not a claim. A kept claim is shown to the reviewer with the attribute that supports it.
+
+  **The guard is a best-effort keyword filter.** It misses claims phrased in other ways and can
+  occasionally remove a legitimate sentence (check the warnings). The administrator who accepts a
+  suggestion remains responsible for the published text: read every suggestion before accepting it. National
   transpositions vary (France was still discussing it in October 2026).
 - **Data protection**: prompts contain catalog data only, never customer data. Your provider's
   terms still apply to the product data you send; a self-hosted model avoids sending it.

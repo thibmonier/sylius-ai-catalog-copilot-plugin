@@ -47,6 +47,24 @@ final class ContentGuardTest extends TestCase
         self::assertSame(['claim' => 'eco-friendly', 'type' => 'generic'], $result->warnings[0]['params'] ?? null);
     }
 
+    public function testLegitimateTextIsNeverDeleted(): void
+    {
+        $text = 'A green T-shirt with a green collar. Gründlich gewaschen. Certified OEKO-TEX Standard 100.';
+
+        $result = $this->guard()->apply(ProductField::DESCRIPTION, $text, $this->facts());
+
+        self::assertSame($text, $result->text);
+        self::assertSame([], $result->warnings);
+    }
+
+    public function testClaimsWrittenWithUnicodeHyphensAreRemoved(): void
+    {
+        $result = $this->guard()->apply(ProductField::DESCRIPTION, 'Eco‑friendly packaging. Soft cotton. A carbon–neutral delivery.', $this->facts());
+
+        self::assertSame('Soft cotton.', $result->text);
+        self::assertCount(2, $result->warnings);
+    }
+
     public function testClaimsCanOnlyBeFlagged(): void
     {
         $guard = new ContentGuard(new EnvironmentalClaimDetector(), new FieldLimits(), ContentGuard::CLAIMS_FLAG);

@@ -25,7 +25,14 @@ final class EnvironmentalClaimDetectorTest extends TestCase
                 ['A truly Eco-Friendly shirt.', 'Eco-Friendly', self::GENERIC],
                 ['An eco friendly shirt.', 'eco friendly', self::GENERIC],
                 ['Made to be sustainable.', 'sustainable', self::GENERIC],
-                ['A green mug.', 'green', self::GENERIC],
+                ['A green product for every day.', 'green product', self::GENERIC],
+                ['The greener choice.', 'greener', self::GENERIC],
+                ['Our greenest mug.', 'greenest', self::GENERIC],
+                ['An eco bag.', 'eco', self::GENERIC],
+                ['An environmentally responsible brand.', 'environmentally responsible', self::GENERIC],
+                ['A climate-conscious kettle.', 'climate-conscious', self::GENERIC],
+                ['Good for the planet.', 'Good for the planet', self::GENERIC],
+                ['Eco‑friendly packaging.', 'Eco-friendly', self::GENERIC],
                 ['An energy efficient kettle.', 'energy efficient', self::GENERIC],
                 ['Carbon friendly delivery.', 'Carbon friendly', self::GENERIC],
                 ['A climate-friendly choice.', 'climate-friendly', self::GENERIC],
@@ -39,6 +46,11 @@ final class EnvironmentalClaimDetectorTest extends TestCase
                 ['CO2 neutral since 2020.', 'CO2 neutral', self::NEUTRAL],
                 ['Net zero production.', 'Net zero', self::NEUTRAL],
                 ['Carbon offset shipping.', 'Carbon offset', self::NEUTRAL],
+                ['Committed to carbon neutrality.', 'carbon neutrality', self::NEUTRAL],
+                ['Produced carbon-neutrally.', 'carbon-neutrally', self::NEUTRAL],
+                ['Emissions-free delivery.', 'Emissions-free', self::NEUTRAL],
+                ['Delivery compensated for carbon emissions.', 'compensated for carbon emissions', self::NEUTRAL],
+                ['A carbon–neutral delivery.', 'carbon-neutral', self::NEUTRAL],
             ],
             'fr' => [
                 ['Un t-shirt écologique.', 'écologique', self::GENERIC],
@@ -48,11 +60,17 @@ final class EnvironmentalClaimDetectorTest extends TestCase
                 ['Un tissu respectueux de l\'environnement.', "respectueux de l'environnement", self::GENERIC],
                 ['Une bouilloire économe en énergie.', 'économe en énergie', self::GENERIC],
                 ['Un plastique biosourcé.', 'biosourcé', self::GENERIC],
-                ['Un sac vert pour la planète.', 'vert', self::GENERIC],
+                ['Un sac vert pour la planète.', 'vert pour la planète', self::GENERIC],
+                ['Un produit vert.', 'produit vert', self::GENERIC],
+                ['Fabriqué écologiquement.', 'écologiquement', self::GENERIC],
+                ['Bon pour l’environnement.', "Bon pour l'environnement", self::GENERIC],
+                ['Un sac éco.', 'éco', self::GENERIC],
                 ['Des sacs biodégradables.', 'biodégradables', self::BIODEGRADABLE],
                 ['Livraison neutre en carbone.', 'neutre en carbone', self::NEUTRAL],
                 ['Une usine climatiquement neutre.', 'climatiquement neutre', self::NEUTRAL],
                 ['Une livraison compensée en carbone.', 'compensée en carbone', self::NEUTRAL],
+                ['Objectif neutralité carbone.', 'neutralité carbone', self::NEUTRAL],
+                ['Une usine carboneutre.', 'carboneutre', self::NEUTRAL],
             ],
             'de' => [
                 ['Ein umweltfreundliches Produkt.', 'umweltfreundliches', self::GENERIC],
@@ -62,35 +80,54 @@ final class EnvironmentalClaimDetectorTest extends TestCase
                 ['Ein ökologisches Produkt.', 'ökologisches', self::GENERIC],
                 ['Ein energieeffizienter Wasserkocher.', 'energieeffizienter', self::GENERIC],
                 ['Biobasierter Kunststoff.', 'Biobasierter', self::GENERIC],
+                ['Ein umweltbewusstes Unternehmen.', 'umweltbewusstes', self::GENERIC],
+                ['Ressourcenschonend hergestellt.', 'Ressourcenschonend', self::GENERIC],
+                ['Unsere Ökotasche.', 'Ökotasche', self::GENERIC],
+                ['Gut für die Umwelt.', 'Gut für die Umwelt', self::GENERIC],
+                ['Ein grünes Produkt.', 'grünes Produkt', self::GENERIC],
                 ['Die Tüte ist biologisch abbaubar.', 'biologisch abbaubar', self::BIODEGRADABLE],
                 ['Eine biologisch abbaubaren Tüte.', 'biologisch abbaubaren', self::BIODEGRADABLE],
                 ['Klimaneutral hergestellt.', 'Klimaneutral', self::NEUTRAL],
                 ['Mit klimaneutralen Versand.', 'klimaneutralen', self::NEUTRAL],
                 ['Mit CO2-neutralen Versand.', 'CO2-neutralen', self::NEUTRAL],
                 ['CO2-kompensierter Versand.', 'CO2-kompensierter', self::NEUTRAL],
+                ['CO2-frei geliefert.', 'CO2-frei', self::NEUTRAL],
             ],
             'es' => [
                 ['Una camiseta sostenible.', 'sostenible', self::GENERIC],
                 ['Una taza ecológica.', 'ecológica', self::GENERIC],
                 ['Productos respetuosos con el medio ambiente.', 'respetuosos con el medio ambiente', self::GENERIC],
+                ['Respetuoso con el medioambiente.', 'Respetuoso con el medioambiente', self::GENERIC],
+                ['Fabricado ecológicamente.', 'ecológicamente', self::GENERIC],
+                ['Nuestra sostenibilidad.', 'sostenibilidad', self::GENERIC],
+                ['Una bolsa eco.', 'eco', self::GENERIC],
+                ['Bueno para el planeta.', 'Bueno para el planeta', self::GENERIC],
                 ['Una bolsa biodegradable.', 'biodegradable', self::BIODEGRADABLE],
                 ['Envío neutro en carbono.', 'neutro en carbono', self::NEUTRAL],
                 ['Una fábrica neutra en carbono.', 'neutra en carbono', self::NEUTRAL],
                 ['Una empresa climáticamente neutra.', 'climáticamente neutra', self::NEUTRAL],
+                ['Con neutralidad climática.', 'neutralidad climática', self::NEUTRAL],
             ],
             'it' => [
                 ['Una maglietta ecosostenibile.', 'ecosostenibile', self::GENERIC],
                 ['Prodotti ecologici.', 'ecologici', self::GENERIC],
                 ['Un tessuto rispettoso dell’ambiente.', "rispettoso dell'ambiente", self::GENERIC],
+                ['Borse ecologiche.', 'ecologiche', self::GENERIC],
+                ['Borse amiche dell’ambiente.', "amiche dell'ambiente", self::GENERIC],
+                ['La nostra sostenibilità.', 'sostenibilità', self::GENERIC],
+                ['Una borsa eco.', 'eco', self::GENERIC],
+                ['Buono per il pianeta.', 'Buono per il pianeta', self::GENERIC],
                 ['Una borsa biodegradabile.', 'biodegradabile', self::BIODEGRADABLE],
                 ['Spedizione a impatto zero.', 'a impatto zero', self::NEUTRAL],
                 ['Spedizione compensata in CO2.', 'compensata in CO2', self::NEUTRAL],
+                ['Consegna a emissioni zero.', 'a emissioni zero', self::NEUTRAL],
             ],
             'nl' => [
                 ['Een duurzaam shirt.', 'duurzaam', self::GENERIC],
                 ['Duurzame materialen.', 'Duurzame', self::GENERIC],
                 ['Een milieuvriendelijke tas.', 'milieuvriendelijke', self::GENERIC],
-                ['Een groen product.', 'groen', self::GENERIC],
+                ['Een groen product.', 'groen product', self::GENERIC],
+                ['Goed voor het milieu.', 'Goed voor het milieu', self::GENERIC],
                 ['Een energiezuinige waterkoker.', 'energiezuinige', self::GENERIC],
                 ['Een biologisch afbreekbare tas.', 'biologisch afbreekbare', self::BIODEGRADABLE],
                 ['Klimaatneutrale verzending.', 'Klimaatneutrale', self::NEUTRAL],
@@ -103,6 +140,7 @@ final class EnvironmentalClaimDetectorTest extends TestCase
                 ['Kubek przyjaznego dla środowiska.', 'przyjaznego dla środowiska', self::GENERIC],
                 ['Ze zrównoważonej produkcji.', 'zrównoważonej', self::GENERIC],
                 ['Energooszczędny czajnik.', 'Energooszczędny', self::GENERIC],
+                ['Dobry dla planety.', 'Dobry dla planety', self::GENERIC],
                 ['Biodegradowalna torba.', 'Biodegradowalna', self::BIODEGRADABLE],
                 ['Wysyłka neutralna klimatycznie.', 'neutralna klimatycznie', self::NEUTRAL],
                 ['Produkty neutralne klimatycznie.', 'neutralne klimatycznie', self::NEUTRAL],
@@ -110,8 +148,8 @@ final class EnvironmentalClaimDetectorTest extends TestCase
         ];
 
         foreach ($claims as $language => $cases) {
-            foreach ($cases as [$text, $claim, $type]) {
-                yield sprintf('%s: %s', $language, $claim) => [$text, $claim, $type];
+            foreach ($cases as $index => [$text, $claim, $type]) {
+                yield sprintf('%s #%d: %s', $language, $index, $claim) => [$text, $claim, $type];
             }
         }
     }
@@ -123,6 +161,68 @@ final class EnvironmentalClaimDetectorTest extends TestCase
 
         self::assertSame([['claim' => $claim, 'type' => $type]], $analysis['unsubstantiated']);
         self::assertSame([], $analysis['substantiated']);
+    }
+
+    /** @return iterable<string, array{string, list<array{name: string, value: string, code: string}>, string}> text, attributes, product name */
+    public static function notClaims(): iterable
+    {
+        $notClaims = [
+            'en' => [
+                ['Unsustainableness, greenery, ecologist, Greenwich, economy, ecommerce.', [], 'Mug'],
+                ['A green T-shirt with a green collar.', [], 'Tee'],
+                ['A green product, perfect for tea.', [], 'Green Tea Mug'],
+                ['The green alternative to black.', [['name' => 'Colour', 'value' => 'Green', 'code' => 'color']], 'Mug'],
+                ['Certified OEKO-TEX Standard 100.', [], 'Tee'],
+            ],
+            'fr' => [
+                ['Un t-shirt vert et une veste verte.', [], 'Tee'],
+                ['Un produit vert pomme.', [['name' => 'Couleur', 'value' => 'Vert', 'code' => 'color']], 'Tee'],
+                ['Une économie de temps.', [], 'Tee'],
+            ],
+            'de' => [
+                ['Gründlich gewaschen, vom Gründer entworfen, aus guten Gründen.', [], 'Hemd'],
+                ['Ein grünes Hemd.', [], 'Hemd'],
+                ['Ein grünes Produkt.', [['name' => 'Farbe', 'value' => 'Grün', 'code' => 'color']], 'Hemd'],
+                ['Zertifiziert nach Öko-Tex Standard 100 und Ökotex.', [], 'Hemd'],
+                ['Ökonomisch und praktisch.', [], 'Hemd'],
+            ],
+            'es' => [
+                ['Una camiseta verde.', [], 'Camiseta'],
+                ['Un producto verde.', [], 'Camiseta Verde'],
+            ],
+            'it' => [
+                ['Una maglietta verde.', [], 'Maglietta'],
+            ],
+            'nl' => [
+                ['Verse groenten en een groene trui.', [], 'Trui'],
+                ['Een groen product.', [], 'Groene trui'],
+            ],
+            'pl' => [
+                ['Zielona koszulka.', [], 'Koszulka'],
+            ],
+        ];
+
+        foreach ($notClaims as $language => $cases) {
+            foreach ($cases as $index => [$text, $attributes, $name]) {
+                yield sprintf('%s #%d', $language, $index) => [$text, $attributes, $name];
+            }
+        }
+    }
+
+    /** @param list<array{name: string, value: string, code: string}> $attributes */
+    #[DataProvider('notClaims')]
+    public function testColoursCertificationsAndLookAlikeWordsAreNotClaims(string $text, array $attributes, string $name): void
+    {
+        $facts = new ProductFacts('en_US', 'CODE', $name, [], $attributes);
+
+        self::assertSame([], (new EnvironmentalClaimDetector())->analyse($text, $facts)['unsubstantiated']);
+    }
+
+    public function testAColourGivenByAnOptionValueIsNotAClaim(): void
+    {
+        $facts = new ProductFacts('fr_FR', 'CODE', 'Tee', [], [], [['name' => 'Couleur', 'values' => ['Bleu', 'Verte']]]);
+
+        self::assertSame([], (new EnvironmentalClaimDetector())->analyse('Un produit vert.', $facts)['unsubstantiated']);
     }
 
     public function testItMatchesWholeWordsOnly(): void
@@ -149,6 +249,10 @@ final class EnvironmentalClaimDetectorTest extends TestCase
 
         $analysis = $detector->analyse('Ein nachhaltiges Hemd.', $this->facts([['name' => 'EU Ecolabel', 'value' => 'ja', 'code' => 'eu_ecolabel']]));
         self::assertSame([], $analysis['unsubstantiated']);
+
+        // A registration number is not a negation.
+        $analysis = $detector->analyse('An eco-friendly shirt.', $this->facts([['name' => 'Ecolabel', 'value' => 'EU Ecolabel no. FR/016/012', 'code' => 'ecolabel']]));
+        self::assertSame([], $analysis['unsubstantiated']);
     }
 
     /** @return iterable<string, array{array{name: string, value: string, code: string}}> */
@@ -162,6 +266,12 @@ final class EnvironmentalClaimDetectorTest extends TestCase
         yield 'unrecognised label' => [['name' => 'Certification', 'value' => 'Green Planet Approved', 'code' => 'certification']];
         yield 'label in another attribute' => [['name' => 'Description', 'value' => 'EU Ecolabel', 'code' => 'notes']];
         yield 'affirmative without label' => [['name' => 'Ecolabel', 'value' => 'yes', 'code' => 'ecolabel']];
+        yield 'negation after the label' => [['name' => 'Ecolabel', 'value' => 'EU Ecolabel: no', 'code' => 'ecolabel']];
+        yield 'does not meet' => [['name' => 'Certification', 'value' => 'Does not meet EU Ecolabel', 'code' => 'certification']];
+        yield 'expired' => [['name' => 'Ecolabel', 'value' => 'EU Ecolabel (expired)', 'code' => 'ecolabel']];
+        yield 'candidate' => [['name' => 'Ecolabel', 'value' => 'Candidate for EU Ecolabel', 'code' => 'ecolabel']];
+        yield 'German expired' => [['name' => 'Umweltzeichen', 'value' => 'Blauer Engel (abgelaufen)', 'code' => 'ecolabel']];
+        yield 'Polish negation' => [['name' => 'Ekoznak', 'value' => 'nie, EU Ecolabel w trakcie', 'code' => 'ecolabel']];
     }
 
     /** @param array{name: string, value: string, code: string} $attribute */
@@ -187,7 +297,11 @@ final class EnvironmentalClaimDetectorTest extends TestCase
         $detector = new EnvironmentalClaimDetector();
 
         self::assertSame([], $detector->analyse('The bag is biodegradable.', $this->facts([['name' => 'Biodegradable', 'value' => 'yes (EN 13432)', 'code' => 'biodegradable']]))['unsubstantiated']);
-        self::assertCount(1, $detector->analyse('The bag is biodegradable.', $this->facts([['name' => 'Biodegradable', 'value' => 'No', 'code' => 'biodegradable']]))['unsubstantiated']);
+        self::assertSame([], $detector->analyse('The bag is compostable.', $this->facts([['name' => 'Compostable', 'value' => 'EN 13432 certified', 'code' => 'compostable']]))['unsubstantiated']);
+        self::assertSame([], $detector->analyse('Die Tüte ist biologisch abbaubar.', $this->facts([['name' => 'Biologisch abbaubar', 'value' => 'Ja', 'code' => 'biodegradable']]))['unsubstantiated']);
+        foreach (['No', 'Unknown', '-', '?', 'Partially', 'n/a', 'yes, partially', 'Teilweise'] as $value) {
+            self::assertCount(1, $detector->analyse('The bag is biodegradable.', $this->facts([['name' => 'Biodegradable', 'value' => $value, 'code' => 'biodegradable']]))['unsubstantiated'], $value);
+        }
         self::assertCount(1, $detector->analyse('The bag is biodegradable.', $this->facts([['name' => 'Not biodegradable', 'value' => 'yes', 'code' => 'not_biodegradable']]))['unsubstantiated']);
         self::assertCount(1, $detector->analyse('The bag is biodegradable.', $this->facts([['name' => 'Ecolabel', 'value' => 'EU Ecolabel', 'code' => 'ecolabel']]))['unsubstantiated']);
     }

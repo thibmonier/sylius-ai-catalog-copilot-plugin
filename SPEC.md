@@ -92,17 +92,25 @@ modified.
      iframe, object, embed, svg, media, form controls...), raw-text elements also stripped before
      parsing; block ends, table rows and `dt`/`dd` become line breaks; entities decoded; Sylius shop templates render descriptions escaped with `nl2br`, so the
      stored value is plain text. Meta fields become one line.
-   - `EnvironmentalClaimDetector`: inflection-tolerant patterns (stems + letters, whole words,
+   - `EnvironmentalClaimDetector` (best-effort keyword filter; the reviewer stays responsible):
+     inflection-tolerant patterns (stems + letters, whole words,
      typographic apostrophes normalised) for the Annex I examples and their translations in
      en/fr/de/es/it/nl/pl: generic claims (eco-friendly, green, ecological, sustainable, climate /
-     carbon friendly, energy efficient, bio-based...), "biodegradable"/"compostable", and carbon /
-     climate neutrality, net zero and offsetting ("compensated") claims. Colour words (green,
-     vert, grün, verde, groen, zielony) are claims unless an attribute value gives that colour.
-     Substantiation needs an explicit attribute with a positive value (negative or pending values
-     such as no / none / non / nein / aucun / pending never count): generic claims an
-     `ecolabel_attributes` code whose value names a recognised label (EU Ecolabel, Blauer Engel,
-     Nordic Swan... + configurable list) or an affirmative value on an attribute named after such
-     a label; "biodegradable" a `biodegradable_attributes` code; neutrality claims never. Mode
+     carbon friendly, energy efficient, bio-based, standalone "eco"...), "biodegradable" /
+     "compostable", and carbon / climate neutrality, net zero, emissions-free and offsetting
+     ("compensated") claims. Unicode hyphens, dashes and non-breaking spaces are normalised.
+     Overlapping matches are reported once (the longest). Colour words (green, vert, grün,
+     verde, groen, zielony) are claims only inside eco phrases ("green product", "greener",
+     "produit vert", "grünes Produkt"...), and not when the product name, attribute values or
+     option values contain the same colour root; the German roots are exact word forms
+     (Gründer, Gründlich are not colours), "Öko-Tex"/"Ökotex" and "ökonomisch" are excluded.
+     Substantiation needs an explicit attribute whose value contains no denying, qualifying,
+     expiry or pending word anywhere (no, not, does not, none, nein, aucun, expired, abgelaufen,
+     candidate, pending, partially, unknown...; "no." followed by a number is a registration
+     number): generic claims an `ecolabel_attributes` code whose value names a recognised label
+     (EU Ecolabel, Blauer Engel, Nordic Swan... + configurable list) or an affirmative value on an
+     attribute named after such a label; "biodegradable" a `biodegradable_attributes` code whose
+     value starts with an explicit affirmative word or names a compostability standard; neutrality claims never. Mode
      `remove` (default) drops the sentence (or keyword) containing the claim, `flag` keeps it;
      both add a warning, and a substantiated claim adds a warning with its evidence.
    - Meta keywords normalised (lower case, comma separated, deduplicated).
