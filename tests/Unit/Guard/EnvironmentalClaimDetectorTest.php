@@ -118,7 +118,7 @@ final class EnvironmentalClaimDetectorTest extends TestCase
                 ['Una borsa eco.', 'eco', self::GENERIC],
                 ['Buono per il pianeta.', 'Buono per il pianeta', self::GENERIC],
                 ['Una borsa biodegradabile.', 'biodegradabile', self::BIODEGRADABLE],
-                ['Spedizione a impatto zero.', 'a impatto zero', self::NEUTRAL],
+                ['Spedizione a impatto zero.', 'impatto zero', self::NEUTRAL],
                 ['Spedizione compensata in CO2.', 'compensata in CO2', self::NEUTRAL],
                 ['Consegna a emissioni zero.', 'a emissioni zero', self::NEUTRAL],
             ],
@@ -154,6 +154,86 @@ final class EnvironmentalClaimDetectorTest extends TestCase
         }
     }
 
+    /** @return iterable<string, array{string}> neutrality, net zero and offsetting claims: removed in every mode */
+    public static function neutralityClaims(): iterable
+    {
+        $texts = [
+            'en' => [
+                'We offset all our shipping emissions.', 'We offset our emissions.', 'Our carbon footprint is fully offset.',
+                'The brand compensates our CO2 emissions.', 'A carbon-zero mug.', 'GHG neutral production.',
+                'Greenhouse-gas neutral.', 'Net zero since 2024.',
+            ],
+            'fr' => ['Nous compensons nos émissions.', 'La marque compense ses émissions de CO2.', 'Objectif net zéro.', 'Un bilan zéro net.', 'Livraison sans émissions.', 'Neutralité CO2 garantie.', 'Émissions compensées.'],
+            'de' => ['Netto-Null bis 2030.', 'Treibhausgasneutral hergestellt.', 'THG-neutral versendet.', 'Kohlenstoffneutrale Produktion.', 'CO2-ausgeglichener Versand.', 'Wir kompensieren unsere Emissionen.'],
+            'es' => ['Compensamos nuestras emisiones.', 'Un envío carbono neutral.', 'Producción carbono neutro.', 'Entrega sin emisiones.', 'Emisiones netas cero.'],
+            'it' => ['Compensiamo le nostre emissioni.', 'Spedizione neutro in carbonio.', 'Fabbrica climaticamente neutro.', 'Impatto zero garantito.', 'Emissioni nette zero.'],
+            'nl' => ['Netto nul in 2030.', 'Uitstootvrije levering.', 'Wij compenseren onze uitstoot.'],
+            'pl' => ['Zeroemisyjny transport.', 'Bezemisyjna dostawa.'],
+        ];
+
+        foreach ($texts as $language => $cases) {
+            foreach ($cases as $index => $text) {
+                yield sprintf('%s #%d', $language, $index) => [$text];
+            }
+        }
+    }
+
+    #[DataProvider('neutralityClaims')]
+    public function testNeutralityAndOffsettingClaimsAreDetectedAsNeverSubstantiable(string $text): void
+    {
+        $facts = $this->facts([['name' => 'Ecolabel', 'value' => 'EU Ecolabel', 'code' => 'ecolabel']]);
+        $analysis = (new EnvironmentalClaimDetector())->analyse($text, $facts);
+
+        self::assertNotSame([], $analysis['unsubstantiated'], $text);
+        self::assertContains(self::NEUTRAL, array_column($analysis['unsubstantiated'], 'type'), $text);
+    }
+
+    public function testANeutralityClaimWinsOverAnOverlappingGenericClaim(): void
+    {
+        $analysis = (new EnvironmentalClaimDetector())->analyse('A climate-neutral and climate-friendly shirt.', $this->facts());
+
+        self::assertSame([
+            ['claim' => 'climate-neutral', 'type' => self::NEUTRAL],
+            ['claim' => 'climate-friendly', 'type' => self::GENERIC],
+        ], $analysis['unsubstantiated']);
+        self::assertSame(self::NEUTRAL, (new EnvironmentalClaimDetector())->analyse('Our eco carbon-neutral shipping.', $this->facts())['unsubstantiated'][1]['type']);
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function extraGenericClaims(): iterable
+    {
+        yield 'fr envers' => ['Un tissu respectueux envers l’environnement.'];
+        yield 'fr nature' => ['Respectueux de la nature.'];
+        yield 'fr écoconçu' => ['Un sac écoconçu.'];
+        yield 'en efficiency' => ['Outstanding energy efficiency.'];
+        yield 'en better for the planet' => ['Better for the planet.'];
+        yield 'en good for our planet' => ['Good for our planet.'];
+        yield 'en friendly to' => ['Friendly to the environment.'];
+        yield 'de Öko-Baumwolle' => ['Aus Öko-Baumwolle.'];
+        yield 'de Öko-Produkt' => ['Ein Öko-Produkt.'];
+        yield 'de Öko-Tasche' => ['Die Öko-Tasche.'];
+        yield 'de umweltverträglich' => ['Umweltverträglich verpackt.'];
+        yield 'de Energieeffizienz' => ['Hohe Energieeffizienz.'];
+        yield 'de gut fürs Klima' => ['Gut fürs Klima.'];
+        yield 'es ambiente' => ['Respetuoso con el ambiente.'];
+        yield 'es eficiencia' => ['Gran eficiencia energética.'];
+        yield 'it natura' => ['Rispettoso della natura.'];
+        yield 'it pianeta' => ['Amica del pianeta.'];
+        yield 'it efficienza' => ['Ottima efficienza energetica.'];
+        yield 'nl milieubewust' => ['Milieubewust geproduceerd.'];
+        yield 'nl klimaat' => ['Goed voor het klimaat.'];
+        yield 'en go green with a green brand' => ['Go green: the greenest choice.'];
+    }
+
+    #[DataProvider('extraGenericClaims')]
+    public function testExtraGenericClaimForms(string $text): void
+    {
+        // A brand named "Green" does not exempt "go green" or "greenest".
+        $facts = new ProductFacts('en_US', 'CODE', 'Green Valley Tote', [], []);
+
+        self::assertNotSame([], (new EnvironmentalClaimDetector())->analyse($text, $facts)['unsubstantiated'], $text);
+    }
+
     #[DataProvider('claims')]
     public function testItFindsClaimsInEveryLanguageAndInflection(string $text, string $claim, string $type): void
     {
@@ -169,6 +249,9 @@ final class EnvironmentalClaimDetectorTest extends TestCase
         $notClaims = [
             'en' => [
                 ['Unsustainableness, greenery, ecologist, Greenwich, economy, ecommerce.', [], 'Mug'],
+                ['Use the Eco programme or the Programme Eco 40-60.', [], 'Washing machine'],
+                ['Press the eco button: Eco mode saves time.', [], 'Dishwasher'],
+                ['Energy efficiency class A.', [], 'Fridge'],
                 ['A green T-shirt with a green collar.', [], 'Tee'],
                 ['A green product, perfect for tea.', [], 'Green Tea Mug'],
                 ['The green alternative to black.', [['name' => 'Colour', 'value' => 'Green', 'code' => 'color']], 'Mug'],
@@ -176,11 +259,14 @@ final class EnvironmentalClaimDetectorTest extends TestCase
             ],
             'fr' => [
                 ['Un t-shirt vert et une veste verte.', [], 'Tee'],
+                ['Choisissez le mode Eco ou le programme Eco 40-60.', [], 'Lave-linge'],
                 ['Un produit vert pomme.', [['name' => 'Couleur', 'value' => 'Vert', 'code' => 'color']], 'Tee'],
                 ['Une économie de temps.', [], 'Tee'],
             ],
             'de' => [
                 ['Gründlich gewaschen, vom Gründer entworfen, aus guten Gründen.', [], 'Hemd'],
+                ['Ein Ökosystem von Zubehör.', [], 'Hemd'],
+                ['Energieeffizienzklasse B.', [], 'Kühlschrank'],
                 ['Ein grünes Hemd.', [], 'Hemd'],
                 ['Ein grünes Produkt.', [['name' => 'Farbe', 'value' => 'Grün', 'code' => 'color']], 'Hemd'],
                 ['Zertifiziert nach Öko-Tex Standard 100 und Ökotex.', [], 'Hemd'],
@@ -188,10 +274,14 @@ final class EnvironmentalClaimDetectorTest extends TestCase
             ],
             'es' => [
                 ['Una camiseta verde.', [], 'Camiseta'],
+                ['Con cancelación de eco para las llamadas.', [], 'Auriculares'],
+                ['Programa eco 40-60.', [], 'Lavadora'],
                 ['Un producto verde.', [], 'Camiseta Verde'],
             ],
             'it' => [
                 ['Una maglietta verde.', [], 'Maglietta'],
+                ["Con cancellazione dell'eco.", [], 'Cuffie'],
+                ['Programma Eco 40-60.', [], 'Lavatrice'],
             ],
             'nl' => [
                 ['Verse groenten en een groene trui.', [], 'Trui'],
@@ -216,6 +306,28 @@ final class EnvironmentalClaimDetectorTest extends TestCase
         $facts = new ProductFacts('en_US', 'CODE', $name, [], $attributes);
 
         self::assertSame([], (new EnvironmentalClaimDetector())->analyse($text, $facts)['unsubstantiated']);
+    }
+
+    /** @return iterable<string, array{string, string}> text, colour value */
+    public static function compoundColours(): iterable
+    {
+        yield 'pl zieloną' => ['Zieloną alternatywę.', 'Zielony'];
+        yield 'de Dunkelgrün' => ['Ein grünes Produkt.', 'Dunkelgrün'];
+        yield 'de Olivgrün' => ['Die grüne Alternative.', 'Olivgrün'];
+        yield 'nl Donkergroen' => ['Een groene keuze.', 'Donkergroen'];
+    }
+
+    #[DataProvider('compoundColours')]
+    public function testInflectedAndCompoundColoursAreNotClaims(string $text, string $colour): void
+    {
+        $facts = $this->facts([['name' => 'Colour', 'value' => $colour, 'code' => 'color']]);
+
+        self::assertSame([], (new EnvironmentalClaimDetector())->analyse($text, $facts)['unsubstantiated']);
+    }
+
+    public function testZeroCarbonFriendlyIsANeutralityClaim(): void
+    {
+        self::assertSame(self::NEUTRAL, (new EnvironmentalClaimDetector())->analyse('A zero-carbon-friendly mug.', $this->facts())['unsubstantiated'][0]['type']);
     }
 
     public function testAColourGivenByAnOptionValueIsNotAClaim(): void
@@ -272,6 +384,14 @@ final class EnvironmentalClaimDetectorTest extends TestCase
         yield 'candidate' => [['name' => 'Ecolabel', 'value' => 'Candidate for EU Ecolabel', 'code' => 'ecolabel']];
         yield 'German expired' => [['name' => 'Umweltzeichen', 'value' => 'Blauer Engel (abgelaufen)', 'code' => 'ecolabel']];
         yield 'Polish negation' => [['name' => 'Ekoznak', 'value' => 'nie, EU Ecolabel w trakcie', 'code' => 'ecolabel']];
+        yield 'without' => [['name' => 'Ecolabel', 'value' => 'Without EU Ecolabel', 'code' => 'ecolabel']];
+        yield 'refused' => [['name' => 'Ecolabel', 'value' => 'EU Ecolabel refused', 'code' => 'ecolabel']];
+        yield 'lapsed' => [['name' => 'Ecolabel', 'value' => 'EU Ecolabel (lapsed)', 'code' => 'ecolabel']];
+        yield 'former' => [['name' => 'Ecolabel', 'value' => 'Former EU Ecolabel holder', 'code' => 'ecolabel']];
+        yield 'never' => [['name' => 'Ecolabel', 'value' => 'Never EU Ecolabel', 'code' => 'ecolabel']];
+        yield 'lacks' => [['name' => 'Certification', 'value' => 'ISO 9001, lacks EU Ecolabel', 'code' => 'certification']];
+        yield 'aiming for' => [['name' => 'Ecolabel', 'value' => 'Aiming for EU Ecolabel', 'code' => 'ecolabel']];
+        yield 'tbd' => [['name' => 'Ecolabel', 'value' => 'EU Ecolabel? TBD', 'code' => 'ecolabel']];
     }
 
     /** @param array{name: string, value: string, code: string} $attribute */
@@ -282,6 +402,24 @@ final class EnvironmentalClaimDetectorTest extends TestCase
 
         self::assertCount(1, $analysis['unsubstantiated']);
         self::assertSame([], $analysis['substantiated']);
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function legitimateEvidence(): iterable
+    {
+        yield 'licence number' => ['EU Ecolabel licence no FR/020/012'];
+        yield 'number after No:' => ['No: FR/020/012, EU Ecolabel'];
+        yield 'unrelated negation after' => ['EU Ecolabel, not tested on animals'];
+        yield 'Spanish without phosphates' => ['Etiqueta ecológica de la UE, sin fosfatos'];
+        yield 'German without' => ['Blauer Engel, ohne Mikroplastik'];
+    }
+
+    #[DataProvider('legitimateEvidence')]
+    public function testNegationsAboutSomethingElseDoNotRejectTheLabel(string $value): void
+    {
+        $facts = $this->facts([['name' => 'Ecolabel', 'value' => $value, 'code' => 'ecolabel']]);
+
+        self::assertSame([], (new EnvironmentalClaimDetector())->analyse('An eco-friendly shirt.', $facts)['unsubstantiated'], $value);
     }
 
     public function testEcolabelAttributesAndLabelsAreConfigurable(): void
@@ -299,7 +437,8 @@ final class EnvironmentalClaimDetectorTest extends TestCase
         self::assertSame([], $detector->analyse('The bag is biodegradable.', $this->facts([['name' => 'Biodegradable', 'value' => 'yes (EN 13432)', 'code' => 'biodegradable']]))['unsubstantiated']);
         self::assertSame([], $detector->analyse('The bag is compostable.', $this->facts([['name' => 'Compostable', 'value' => 'EN 13432 certified', 'code' => 'compostable']]))['unsubstantiated']);
         self::assertSame([], $detector->analyse('Die Tüte ist biologisch abbaubar.', $this->facts([['name' => 'Biologisch abbaubar', 'value' => 'Ja', 'code' => 'biodegradable']]))['unsubstantiated']);
-        foreach (['No', 'Unknown', '-', '?', 'Partially', 'n/a', 'yes, partially', 'Teilweise'] as $value) {
+        self::assertSame([], $detector->analyse('The bag is biodegradable.', $this->facts([['name' => 'Biodegradable', 'value' => 'Yes, no microplastics', 'code' => 'biodegradable']]))['unsubstantiated']);
+        foreach (['No', 'Unknown', '-', '?', 'Partially', 'n/a', 'yes, partially', 'Teilweise', 'Yes, except the lid', 'Yes (lid excluded)', 'Yes - under test', 'Yes, untested', 'Oui, sauf le couvercle', 'Ja, teils', 'EN 13432 failed', '1 of 3 parts', 'Without'] as $value) {
             self::assertCount(1, $detector->analyse('The bag is biodegradable.', $this->facts([['name' => 'Biodegradable', 'value' => $value, 'code' => 'biodegradable']]))['unsubstantiated'], $value);
         }
         self::assertCount(1, $detector->analyse('The bag is biodegradable.', $this->facts([['name' => 'Not biodegradable', 'value' => 'yes', 'code' => 'not_biodegradable']]))['unsubstantiated']);

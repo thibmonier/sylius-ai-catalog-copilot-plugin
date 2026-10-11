@@ -83,6 +83,12 @@ final class ContentGuard implements ContentGuardInterface
         }
         if ([] !== $removed) {
             $text = $this->removeClaims($field, $text, $removed);
+            // A flagged claim whose sentence went away with a removed claim is removed too.
+            foreach ($warnings as $index => $warning) {
+                if ('environmental_claim_flagged' === $warning['code'] && !$this->claimDetector->contains($text, $warning['params']['claim'])) {
+                    $warnings[$index]['code'] = 'environmental_claim_removed';
+                }
+            }
         }
 
         if (ProductField::META_KEYWORDS === $field) {

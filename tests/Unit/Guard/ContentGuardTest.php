@@ -81,6 +81,26 @@ final class ContentGuardTest extends TestCase
         ], $result->warnings);
     }
 
+    public function testAFlaggedClaimRemovedWithANeutralityClaimIsReportedAsRemoved(): void
+    {
+        $result = $this->guard()->apply(ProductField::DESCRIPTION, 'Soft cotton. Eco-friendly and carbon neutral delivery. A sustainable brand.', $this->facts());
+
+        self::assertSame('Soft cotton. A sustainable brand.', $result->text);
+        self::assertSame([
+            ['code' => 'environmental_claim_removed', 'params' => ['claim' => 'Eco-friendly', 'type' => 'generic']],
+            ['code' => 'environmental_claim_removed', 'params' => ['claim' => 'carbon neutral', 'type' => 'carbon_neutral']],
+            ['code' => 'environmental_claim_flagged', 'params' => ['claim' => 'sustainable', 'type' => 'generic']],
+        ], $result->warnings);
+    }
+
+    public function testOffsettingVerbsAreRemovedInFlagMode(): void
+    {
+        $result = $this->guard()->apply(ProductField::DESCRIPTION, 'A linen shirt. We offset all our shipping emissions. Nous compensons nos émissions. Soft.', $this->facts());
+
+        self::assertSame('A linen shirt. Soft.', $result->text);
+        self::assertSame(['environmental_claim_removed', 'environmental_claim_removed'], array_column($result->warnings, 'code'));
+    }
+
     public function testClaimsCanOnlyBeFlagged(): void
     {
         $guard = new ContentGuard(new EnvironmentalClaimDetector(), new FieldLimits(), ContentGuard::CLAIMS_FLAG);

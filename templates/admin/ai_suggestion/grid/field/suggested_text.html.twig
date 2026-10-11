@@ -1,3 +1,4 @@
+{% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/claims_alert.html.twig' with { suggestion: data } only %}
 <div class="text-wrap" style="max-width: 40rem" {{ sylius_test_html_attribute('tmonier-ai-copilot-suggested-text', data.id) }}>
     {{ tmonier_ai_copilot_highlight_claims(data.suggestedText|u.truncate(240, '…', false), data.warnings) }}
 </div>

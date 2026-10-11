@@ -77,6 +77,14 @@ final class AdminSuggestionGridTest extends WebTestCase
 
         $crawler = $this->client->request('GET', '/admin/ai-suggestions/', ['criteria' => ['product' => ['type' => 'contains', 'value' => 'AI_CLAIMS']]]);
         self::assertSame('eco-friendly', $crawler->filter(sprintf('[data-test-tmonier-ai-copilot-suggested-text="%d"] mark', $this->idOf($suggestion)))->text());
+        self::assertCount(1, $crawler->filter(sprintf('[data-test-tmonier-ai-copilot-claims-alert="%d"]', $this->idOf($suggestion))));
+
+        // Typographic hyphen in the stored text: still highlighted.
+        $suggestion = $this->reload($suggestion);
+        $suggestion->setSuggestedText("A linen shirt. It is eco\u{2011}friendly.");
+        $this->entityManager()->flush();
+        $crawler = $this->client->request('GET', sprintf('/admin/ai-suggestions/%d', $this->idOf($suggestion)));
+        self::assertSame("eco\u{2011}friendly", $crawler->filter('[data-test-tmonier-ai-copilot-suggestion-text] mark')->text());
     }
 
     public function testTheMenuLinksToTheGrid(): void

@@ -29,6 +29,20 @@ final class AiCopilotExtensionTest extends TestCase
         self::assertSame(['eco-friendly'], $this->extension()->flaggedClaims($warnings));
     }
 
+    public function testClaimsWrittenWithUnicodeHyphensAndCurlyApostrophesAreHighlighted(): void
+    {
+        $warnings = [
+            ['code' => 'environmental_claim_flagged', 'params' => ['claim' => 'Eco-friendly', 'type' => 'generic']],
+            ['code' => 'environmental_claim_flagged', 'params' => ['claim' => "respectueux de l'environnement", 'type' => 'generic']],
+        ];
+
+        $html = $this->extension()->highlightClaims('Eco‑friendly, respectueux de l’environnement.', $warnings);
+
+        self::assertSame(2, substr_count($html, '<mark'));
+        self::assertStringContainsString('>Eco‑friendly</mark>', $html);
+        self::assertStringContainsString('>respectueux de l’environnement</mark>', $html);
+    }
+
     public function testATextWithoutClaimsIsOnlyEscaped(): void
     {
         self::assertSame('A &lt;linen&gt; shirt.', $this->extension()->highlightClaims('A <linen> shirt.', []));

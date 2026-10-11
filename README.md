@@ -257,6 +257,20 @@ Both are optional: this plugin depends on neither.
 
 ## Limitations
 
+- **Environmental claims guard: known gaps.** It is a best-effort keyword filter in seven
+  languages; the reviewer stays responsible. Known gaps:
+  - claims phrased as whole sentences ("we care about the planet", "inspired by nature", "a
+    small step for the Earth") or in other languages are not detected;
+  - a bare "öko" is not a claim (only "Öko-…" compounds); a bare "eco" is ignored next to
+    "mode", "programme", "de"/"dell'" (echo) and similar words, so "Eco" used as a claim in such
+    a context is missed;
+  - "energy efficiency class / Energieeffizienzklasse / classe d'efficacité énergétique" is
+    treated as the energy label, not as a claim;
+  - colour phrases are limited to common nouns ("green product/choice/alternative"…); a colour
+    given by the product exempts them, even when the text means the eco sense;
+  - evidence values are read with word lists: a denial phrased differently ("we gave up the EU
+    Ecolabel") can still be taken as evidence, and a value stating an unrelated restriction
+    before the label name ("not tested on animals, EU Ecolabel") is rejected.
 - One field at a time; no preview modal, no streaming. Generation is synchronous (a few seconds
   with a hosted model).
 - No rate limiter or budget cap yet: only `max_products_per_run` for the command. Token counts are

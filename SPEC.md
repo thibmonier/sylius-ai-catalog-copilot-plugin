@@ -104,10 +104,17 @@ modified.
      "produit vert", "grünes Produkt"...), and not when the product name, attribute values or
      option values contain the same colour root; the German roots are exact word forms
      (Gründer, Gründlich are not colours), "Öko-Tex"/"Ökotex" and "ökonomisch" are excluded.
-     Substantiation needs an explicit attribute whose value contains no denying, qualifying,
-     expiry or pending word anywhere (no, not, does not, none, nein, aucun, expired, abgelaufen,
-     candidate, pending, partially, unknown...; "no." followed by a number is a registration
-     number): generic claims an `ecolabel_attributes` code whose value names a recognised label
+     Substantiation needs an explicit attribute whose value does not start or end with a denial
+     (no, not, without, never, nein, aucun...; "no" followed by a number is a registration
+     number), has no withdrawal or postponement status anywhere (expired, withdrawn, refused,
+     lapsed, candidate, pending, TBD, failed, abgelaufen...) and no denial or qualifier in the
+     three words before the label name (not, without, former, lacks, candidate for...); other
+     negations ("EU Ecolabel, not tested on animals", "sin fosfatos") do not count. Neutrality
+     and offsetting claims (including verbs: "we offset our emissions", "nous compensons nos
+     émissions") win over overlapping generic matches, and a flagged claim whose sentence is
+     removed with them is reported as removed. Bare "eco" next to programme / mode words or
+     meaning "echo" (es/it) is not a claim. Colour phrases are exempted only for "colour + noun"
+     phrases, compound colour names (Dunkelgrün) count: generic claims an `ecolabel_attributes` code whose value names a recognised label
      (EU Ecolabel, Blauer Engel, Nordic Swan... + configurable list) or an affirmative value on an
      attribute named after such a label; "biodegradable" a `biodegradable_attributes` code whose
      value starts with an explicit affirmative word or names a compostability standard; neutrality claims never. Mode

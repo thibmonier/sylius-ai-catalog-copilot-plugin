@@ -7,6 +7,7 @@ namespace Tmonier\SyliusAiCatalogCopilotPlugin\Twig;
 use Sylius\Component\Core\Model\ProductInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\DemoTextGenerator;
+use Tmonier\SyliusAiCatalogCopilotPlugin\Guard\EnvironmentalClaimDetector;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Model\ProductField;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Provenance\ProvenanceProviderInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Provenance\ProvenanceView;
@@ -69,17 +70,34 @@ final class AiCopilotExtension extends AbstractExtension
     public function highlightClaims(string $text, array $warnings): string
     {
         $claims = $this->flaggedClaims($warnings, true);
-        $html = htmlspecialchars($text, \ENT_QUOTES | \ENT_HTML5, 'UTF-8');
-        if ([] !== $claims) {
-            usort($claims, static fn (string $a, string $b): int => mb_strlen($b) <=> mb_strlen($a));
-            $pattern = '/(?<![\p{L}\p{N}])(' . implode('|', array_map(
-                static fn (string $claim): string => preg_quote(htmlspecialchars($claim, \ENT_QUOTES | \ENT_HTML5, 'UTF-8'), '/'),
-                $claims,
-            )) . ')(?![\p{L}\p{N}])/iu';
-            $html = (string) preg_replace($pattern, '<mark class="tmonier-ai-copilot-claim" data-test-tmonier-ai-copilot-claim>$1</mark>', $html);
+        if ([] === $claims) {
+            return nl2br(self::escape($text));
+        }
+
+        // Claims were found on the normalised text: match hyphens, dashes, apostrophes and spaces loosely.
+        usort($claims, static fn (string $a, string $b): int => mb_strlen($b) <=> mb_strlen($a));
+        $bodies = array_map(static function (string $claim): string {
+            $body = preg_quote(EnvironmentalClaimDetector::normalize($claim), '/');
+            $body = str_replace(['\\-', '\''], ['[\-\x{2010}-\x{2015}\x{2212}]', '[\'’‘ʼ`]'], $body);
+
+            return (string) preg_replace('/\s+/u', '[\s\x{00A0}\x{202F}]+', $body);
+        }, $claims);
+        $pattern = '/(?<![\p{L}\p{N}])(' . implode('|', $bodies) . ')(?![\p{L}\p{N}])/iu';
+
+        $parts = preg_split($pattern, $text, -1, \PREG_SPLIT_DELIM_CAPTURE) ?: [$text];
+        $html = '';
+        foreach ($parts as $index => $part) {
+            $html .= 1 === $index % 2
+                ? '<mark class="tmonier-ai-copilot-claim" data-test-tmonier-ai-copilot-claim>' . self::escape($part) . '</mark>'
+                : self::escape($part);
         }
 
         return nl2br($html);
+    }
+
+    private static function escape(string $text): string
+    {
+        return htmlspecialchars($text, \ENT_QUOTES | \ENT_HTML5, 'UTF-8');
     }
 
     /**
