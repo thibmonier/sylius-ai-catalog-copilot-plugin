@@ -1,0 +1,104 @@
+{
+    "name": "tmonier/sylius-ai-catalog-copilot-plugin",
+    "type": "sylius-plugin",
+    "description": "AI catalog copilot for the Sylius 2 admin: reviewable product description, meta and translation suggestions through Symfony AI",
+    "keywords": [
+        "sylius",
+        "sylius-plugin",
+        "ai",
+        "symfony-ai",
+        "llm",
+        "product-description",
+        "seo",
+        "translation",
+        "catalog",
+        "back-office"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "sylius/sylius": "^2.2",
+        "symfony/ai-bundle": "^0.14",
+        "symfony/ai-platform": "^0.14",
+        "symfony/html-sanitizer": "^7.4 || ^8.0"
+    },
+    "require-dev": {
+        "nyholm/psr7": "^1.8",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-doctrine": "^2.0",
+        "phpstan/phpstan-webmozart-assert": "^2.0",
+        "phpunit/phpunit": "^10.5",
+        "sylius-labs/coding-standard": "^4.4",
+        "sylius/test-application": "^2.0.0@alpha",
+        "symfony/browser-kit": "^7.4 || ^8.0",
+        "symfony/css-selector": "^7.4 || ^8.0",
+        "symfony/debug-bundle": "^7.4 || ^8.0",
+        "symfony/dom-crawler": "^7.4 || ^8.0",
+        "symfony/dotenv": "^7.4 || ^8.0",
+        "symfony/http-client": "^7.4 || ^8.0",
+        "symfony/intl": "^7.4 || ^8.0",
+        "symfony/runtime": "^7.4 || ^8.0",
+        "symfony/web-profiler-bundle": "^7.4 || ^8.0",
+        "symfony/webpack-encore-bundle": "^2.2"
+    },
+    "suggest": {
+        "symfony/ai-mistral-platform": "To generate suggestions with Mistral",
+        "symfony/ai-open-ai-platform": "To generate suggestions with OpenAI",
+        "symfony/ai-anthropic-platform": "To generate suggestions with Anthropic",
+        "symfony/ai-ollama-platform": "To generate suggestions with a self-hosted Ollama model",
+        "tmonier/sylius-audit-log-plugin": "Records the product change made when a suggestion is accepted"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": false,
+            "php-http/discovery": false,
+            "phpstan/extension-installer": true,
+            "symfony/flex": true,
+            "symfony/runtime": true
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0-dev"
+        },
+        "symfony": {
+            "require": "^7.4"
+        },
+        "public-dir": "vendor/sylius/test-application/public"
+    },
+    "autoload": {
+        "psr-4": {
+            "Tmonier\\SyliusAiCatalogCopilotPlugin\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\Tmonier\\SyliusAiCatalogCopilotPlugin\\": [
+                "tests/",
+                "tests/TestApplication/src/"
+            ]
+        }
+    },
+    "scripts": {
+        "database-reset": [
+            "vendor/bin/console doctrine:database:drop --force --if-exists",
+            "vendor/bin/console doctrine:database:create",
+            "vendor/bin/console doctrine:migration:migrate -n",
+            "vendor/bin/console sylius:fixtures:load -n"
+        ],
+        "frontend-clear": [
+            "cd vendor/sylius/test-application && yarn install && yarn build",
+            "vendor/bin/console assets:install"
+        ],
+        "test-app-init": [
+            "@database-reset",
+            "@frontend-clear"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Thibaut Monier"
+        }
+    ]
+}
