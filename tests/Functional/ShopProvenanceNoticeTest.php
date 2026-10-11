@@ -28,7 +28,11 @@ final class ShopProvenanceNoticeTest extends WebTestCase
     public function testAnAcceptedAiDescriptionIsMarkedInTheShop(): void
     {
         $product = $this->createProduct('AI_SHOP', ['description' => 'Original description']);
-        $this->applier()->accept($this->generate($product, 'description'), null);
+        $suggestion = $this->generate($product, 'description');
+        // As if a configured Symfony AI platform had written it (the test app uses the demo generator).
+        $suggestion->setGenerator('platform');
+        $suggestion->setModel('mistral-small-latest');
+        $this->applier()->accept($suggestion, null);
 
         $crawler = $this->client->request('GET', '/en_US/products/ai_shop-en_us');
 
@@ -36,7 +40,8 @@ final class ShopProvenanceNoticeTest extends WebTestCase
         $notice = $crawler->filter('[data-test-tmonier-ai-copilot-shop-notice]');
         self::assertCount(1, $notice);
         self::assertSame('true', $notice->attr('data-ai-generated'));
-        self::assertSame('demo', $notice->attr('data-ai-model'));
+        self::assertSame('mistral-small-latest', $notice->attr('data-ai-model'));
+        self::assertSame('platform', $notice->attr('data-ai-generator'));
         self::assertStringContainsString('written with the help of artificial intelligence', $notice->text());
     }
 
@@ -48,12 +53,30 @@ final class ShopProvenanceNoticeTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertCount(0, $crawler->filter('[data-test-tmonier-ai-copilot-shop-notice]'));
 
-        $this->applier()->accept($this->generate($product, 'description'), null);
+        $suggestion = $this->generate($product, 'description');
+        $suggestion->setGenerator('platform');
+        $this->applier()->accept($suggestion, null);
+        self::assertCount(1, $this->client->request('GET', '/en_US/products/ai_shop_human-en_us')->filter('[data-test-tmonier-ai-copilot-shop-notice]'));
+        $product = $this->reload($product);
         $this->translation($product, 'en_US')->setDescription('Rewritten by a human');
         $this->entityManager()->flush();
 
         $crawler = $this->client->request('GET', '/en_US/products/ai_shop_human-en_us');
         self::assertCount(0, $crawler->filter('[data-test-tmonier-ai-copilot-shop-notice]'));
+    }
+
+    public function testDemoGeneratorTextsAreNeverAdvertisedAsAi(): void
+    {
+        $product = $this->createProduct('AI_SHOP_DEMO', ['description' => 'Original description']);
+        $suggestion = $this->generate($product, 'description');
+        self::assertSame('demo', $suggestion->getGenerator());
+        $this->applier()->accept($suggestion, null);
+
+        $crawler = $this->client->request('GET', '/en_US/products/ai_shop_demo-en_us');
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(0, $crawler->filter('[data-test-tmonier-ai-copilot-shop-notice]'));
+        self::assertStringNotContainsString('artificial intelligence', $crawler->filter('[data-test-product-details]')->text());
     }
 
     private function applier(): SuggestionApplierInterface

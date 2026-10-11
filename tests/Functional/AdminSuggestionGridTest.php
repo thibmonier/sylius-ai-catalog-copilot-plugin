@@ -89,6 +89,10 @@ final class AdminSuggestionGridTest extends WebTestCase
         $accepted = $this->generate($first, 'description');
         $acceptedToo = $this->generate($first, 'meta_keywords');
         $stale = $this->generate($second, 'description');
+        $alreadyRejected = $this->generate($second, 'short_description');
+        /** @var \Tmonier\SyliusAiCatalogCopilotPlugin\Suggestion\SuggestionApplierInterface $applier */
+        $applier = self::getContainer()->get('tmonier_ai_copilot.suggestion_applier');
+        $applier->reject($alreadyRejected, null);
         $this->translation($second, 'en_US')->setDescription('Rewritten by a human');
         $this->entityManager()->flush();
         $this->loginAdmin();
@@ -97,17 +101,21 @@ final class AdminSuggestionGridTest extends WebTestCase
 
         $this->client->request('POST', '/admin/ai-suggestions/bulk/accept', [
             '_csrf_token' => $token,
-            'ids' => [$this->idOf($accepted), $this->idOf($acceptedToo), $this->idOf($stale), 999999999],
+            'ids' => [$this->idOf($accepted), $this->idOf($acceptedToo), $this->idOf($stale), $this->idOf($alreadyRejected), 999999999],
             '_redirect' => '/admin/ai-suggestions/',
         ]);
 
         self::assertResponseRedirects('/admin/ai-suggestions/');
         $this->client->followRedirect();
         self::assertSelectorTextContains('[data-test-sylius-flash-message-type="success"]', '2 suggestion(s) accepted.');
-        self::assertSelectorTextContains('[data-test-sylius-flash-message-type="warning"]', '2 suggestion(s) skipped');
+        self::assertSelectorTextContains('[data-test-sylius-flash-message-type="warning"]', '3 suggestion(s) skipped');
         self::assertSame(AiSuggestionInterface::STATUS_ACCEPTED, $this->reload($accepted)->getStatus());
         self::assertSame(AiSuggestionInterface::STATUS_ACCEPTED, $this->reload($acceptedToo)->getStatus());
         self::assertTrue($this->reload($stale)->isPending());
+        $alreadyRejected = $this->reload($alreadyRejected);
+        self::assertSame(AiSuggestionInterface::STATUS_REJECTED, $alreadyRejected->getStatus());
+        self::assertNull($alreadyRejected->getDecidedBy());
+        self::assertNull($this->translation($this->reload($second), 'en_US')->getShortDescription());
         self::assertNotNull($this->translation($this->reload($first), 'en_US')->getMetaKeywords());
     }
 
@@ -116,7 +124,7 @@ final class AdminSuggestionGridTest extends WebTestCase
         $product = $this->createProduct('AI_BULK_REJECT');
         $suggestions = [$this->generate($product, 'description'), $this->generate($product, 'short_description')];
         $this->loginAdmin();
-        $this->client->request('GET', '/admin/ai-suggestions/');
+        $this->client->request('GET', '/admin/ai-suggestions/', ['criteria' => ['product' => ['type' => 'contains', 'value' => 'AI_BULK_REJECT']]]);
 
         $this->client->request('POST', '/admin/ai-suggestions/bulk/reject', [
             '_csrf_token' => $this->tokenOnPage('[data-test-tmonier-ai-copilot-bulk-reject]'),
@@ -132,8 +140,10 @@ final class AdminSuggestionGridTest extends WebTestCase
 
     public function testBulkWithoutSelection(): void
     {
+        // The bulk forms are only rendered when the grid has rows.
+        $this->generate($this->createProduct('AI_BULK_EMPTY'), 'description');
         $this->loginAdmin();
-        $this->client->request('GET', '/admin/ai-suggestions/');
+        $this->client->request('GET', '/admin/ai-suggestions/', ['criteria' => ['product' => ['type' => 'contains', 'value' => 'AI_BULK_EMPTY']]]);
 
         $this->client->request('POST', '/admin/ai-suggestions/bulk/accept', ['_csrf_token' => $this->tokenOnPage('[data-test-tmonier-ai-copilot-bulk-accept]')]);
 

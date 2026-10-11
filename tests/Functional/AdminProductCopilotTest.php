@@ -150,6 +150,38 @@ final class AdminProductCopilotTest extends WebTestCase
         self::assertStringContainsString('AI-generated', $crawler->filter('[data-test-tmonier-ai-copilot-provenance="description|en_US"]')->text());
     }
 
+    public function testSavingTheProductFormKeepsTheAiMarkingOfAnUntouchedMultiLineText(): void
+    {
+        // No test attribute: the attribute form of the admin would not round-trip it.
+        $product = $this->createProduct('AI_FORM_SAVE', ['description' => 'Original description'], null);
+        $suggestion = $this->generate($product, 'description');
+        $suggestion->setSuggestedText("A linen shirt.\n\nMachine washable.");
+        $suggestion->setGenerator('platform');
+        /** @var \Tmonier\SyliusAiCatalogCopilotPlugin\Suggestion\SuggestionApplierInterface $applier */
+        $applier = self::getContainer()->get('tmonier_ai_copilot.suggestion_applier');
+        $applier->accept($suggestion, null);
+        $this->loginAdmin();
+
+        // Browsers submit textarea line breaks as CRLF: post the product form as a browser would.
+        $crawler = $this->client->request('GET', $this->productUrl($product));
+        $form = $crawler->filter('form[name="sylius_admin_product"]')->form();
+        $field = 'sylius_admin_product[translations][en_US][description]';
+        self::assertTrue($form->has($field));
+        $form[$field] = str_replace("\n", "\r\n", $suggestion->getSuggestedText()) . "\r\n";
+        $this->client->submit($form);
+        self::assertResponseRedirects();
+
+        $crawler = $this->client->followRedirect();
+        self::assertStringContainsString('AI-generated', $crawler->filter('[data-test-tmonier-ai-copilot-provenance="description|en_US"]')->text());
+
+        // Stored raw with CRLF (imports, API): still the accepted text.
+        $product = $this->reload($product);
+        $this->translation($product, 'en_US')->setDescription(str_replace("\n", "\r\n", $suggestion->getSuggestedText()));
+        $this->entityManager()->flush();
+        $crawler = $this->client->request('GET', $this->productUrl($product));
+        self::assertStringContainsString('AI-generated', $crawler->filter('[data-test-tmonier-ai-copilot-provenance="description|en_US"]')->text());
+    }
+
     public function testAStaleSuggestionIsRefused(): void
     {
         $product = $this->createProduct('AI_STALE', ['description' => 'Original description']);

@@ -1,7 +1,9 @@
 name: Symfony AI next minor
 
 # symfony/ai is 0.x: every minor may break. This weekly job tries the next minor
-# (constraint widened on the fly, never committed) so a release can follow it quickly.
+# (constraint replaced on the fly, never committed) so a release can follow it quickly.
+# A failure makes the run red (it is not a required check, it blocks no pull request).
+# When the next minor is not released yet, the job says so and skips the tests.
 
 on:
     schedule:
@@ -12,7 +14,6 @@ on:
 jobs:
     next-minor:
         runs-on: ubuntu-latest
-        continue-on-error: true
 
         name: "symfony/ai next minor, Sylius 2.3, PHP 8.4"
 
@@ -24,16 +25,31 @@ jobs:
                 uses: actions/checkout@v4
 
             -
-                name: Widen the symfony/ai constraints to the next minor
+                name: Find the next symfony/ai minor
+                id: next
                 run: |
                     current=$(jq -r '.require["symfony/ai-platform"]' composer.json | sed 's/^\^0\.//')
-                    next="^0.${current} || ^0.$((current + 1))"
+                    next=$((current + 1))
+                    echo "version=0.${next}" >> "$GITHUB_OUTPUT"
+                    if curl -fsS https://repo.packagist.org/p2/symfony/ai-platform.json | jq -e --arg prefix "v0.${next}." '[.packages["symfony/ai-platform"][].version | select(startswith($prefix))] | length > 0' > /dev/null; then
+                        echo "available=true" >> "$GITHUB_OUTPUT"
+                    else
+                        echo "available=false" >> "$GITHUB_OUTPUT"
+                        echo "::notice title=symfony/ai next minor::symfony/ai 0.${next} is not released yet, nothing to test."
+                    fi
+
+            -
+                name: Require the next minor only
+                if: steps.next.outputs.available == 'true'
+                run: |
+                    next="^${{ steps.next.outputs.version }}"
                     jq --arg next "$next" '.require["symfony/ai-platform"] = $next | .require["symfony/ai-bundle"] = $next' composer.json > composer.next.json
                     mv composer.next.json composer.json
                     jq '.require' composer.json
 
             -
                 name: Build Sylius Test Application
+                if: steps.next.outputs.available == 'true'
                 uses: SyliusLabs/BuildTestAppAction@v4
                 with:
                     e2e_js: "yes"
@@ -46,15 +62,20 @@ jobs:
                     symfony_version: "^7.4"
 
             -
-                name: Show the installed symfony/ai version
-                run: composer show symfony/ai-platform symfony/ai-bundle
+                name: Check that the next minor is installed
+                if: steps.next.outputs.available == 'true'
+                run: |
+                    composer show symfony/ai-platform symfony/ai-bundle
+                    composer show symfony/ai-platform --format=json | jq -e --arg prefix "v${{ steps.next.outputs.version }}." '.versions[0] | startswith($prefix)'
 
             -
                 name: Run static analysis
+                if: steps.next.outputs.available == 'true'
                 run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 
             -
                 name: Run PHPUnit
+                if: steps.next.outputs.available == 'true'
                 run: |
                     vendor/bin/phpunit --colors=always --testsuite=unit
                     vendor/bin/phpunit --colors=always --testsuite=non-unit

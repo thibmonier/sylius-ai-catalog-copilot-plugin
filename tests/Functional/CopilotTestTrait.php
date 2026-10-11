@@ -54,11 +54,11 @@ trait CopilotTestTrait
 
     /**
      * An enabled product of the shop channel, translated in en_US and fr_FR, with a "Material"
-     * text attribute.
+     * text attribute (none when $material is null).
      *
      * @param array<string, string|null> $enUs translation fields of en_US (description...)
      */
-    private function createProduct(string $code, array $enUs = [], string $material = 'Linen'): ProductInterface
+    private function createProduct(string $code, array $enUs = [], ?string $material = 'Linen'): ProductInterface
     {
         $container = self::getContainer();
         $productFactory = $container->get('sylius.factory.product');
@@ -96,22 +96,24 @@ trait CopilotTestTrait
         $pricing->setPrice(2500);
         $variant->addChannelPricing($pricing);
 
-        $attributeFactory = $container->get('sylius.factory.product_attribute');
-        self::assertInstanceOf(AttributeFactoryInterface::class, $attributeFactory);
-        $attribute = $attributeFactory->createTyped('text');
-        self::assertInstanceOf(ProductAttributeInterface::class, $attribute);
-        $attribute->setCode('material_' . strtolower($code));
-        $attribute->setCurrentLocale('en_US');
-        $attribute->setFallbackLocale('en_US');
-        $attribute->setName('Material');
-        $attribute->setTranslatable(false);
-        /** @var ProductAttributeValueInterface $value */
-        $value = $this->factory('sylius.factory.product_attribute_value')->createNew();
-        $value->setAttribute($attribute);
-        $value->setValue($material);
-        $product->addAttribute($value);
+        if (null !== $material) {
+            $attributeFactory = $container->get('sylius.factory.product_attribute');
+            self::assertInstanceOf(AttributeFactoryInterface::class, $attributeFactory);
+            $attribute = $attributeFactory->createTyped('text');
+            self::assertInstanceOf(ProductAttributeInterface::class, $attribute);
+            $attribute->setCode('material_' . strtolower($code));
+            $attribute->setCurrentLocale('en_US');
+            $attribute->setFallbackLocale('en_US');
+            $attribute->setName('Material');
+            $attribute->setTranslatable(false);
+            /** @var ProductAttributeValueInterface $value */
+            $value = $this->factory('sylius.factory.product_attribute_value')->createNew();
+            $value->setAttribute($attribute);
+            $value->setValue($material);
+            $product->addAttribute($value);
+            $this->entityManager()->persist($attribute);
+        }
 
-        $this->entityManager()->persist($attribute);
         $this->entityManager()->persist($product);
         $this->entityManager()->flush();
 
