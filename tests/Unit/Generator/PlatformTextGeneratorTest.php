@@ -48,6 +48,7 @@ final class PlatformTextGeneratorTest extends TestCase
         self::assertInstanceOf(SystemMessage::class, $messages[0]);
         self::assertInstanceOf(UserMessage::class, $messages[1]);
         self::assertSame('You write product content.', (string) $messages[0]->getContent());
+        self::assertSame('Describe the shirt.', $messages[1]->asText());
         self::assertSame('platform', (new PlatformTextGenerator($platform, 'm'))->getType());
     }
 

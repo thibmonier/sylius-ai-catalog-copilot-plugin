@@ -55,7 +55,11 @@ return static function (ContainerConfigurator $container): void {
 
     $services
         ->set('tmonier_ai_copilot.guard.environmental_claims', EnvironmentalClaimDetector::class)
-        ->args([param('tmonier_ai_copilot.environmental_claims.recognised_labels')])
+        ->args([
+            param('tmonier_ai_copilot.environmental_claims.recognised_labels'),
+            param('tmonier_ai_copilot.environmental_claims.ecolabel_attributes'),
+            param('tmonier_ai_copilot.environmental_claims.biodegradable_attributes'),
+        ])
     ;
 
     $services

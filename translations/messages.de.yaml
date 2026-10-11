@@ -39,9 +39,11 @@ tmonier_ai_copilot:
         meta_description: "Meta-Beschreibung"
         meta_keywords: "Meta-Schlüsselwörter"
     provenance:
+        demo: "Demotext, keine KI"
         generated: "KI-generiert"
         edited: "KI-unterstützt, bearbeitet"
     warning:
+        environmental_claim_substantiated: "Umweltaussage „%claim%“ beibehalten, belegt durch %evidence%: bitte prüfen."
         environmental_claim_removed: "Nicht belegte Umweltaussage „%claim%“ entfernt (Richtlinie (EU) 2024/825)."
         environmental_claim_flagged: "Nicht belegte Umweltaussage „%claim%“: vor dem Übernehmen prüfen (Richtlinie (EU) 2024/825)."
         truncated: "Auf %max% Zeichen gekürzt."

@@ -58,7 +58,7 @@ final class SuggestionGenerator implements SuggestionGeneratorInterface
         $sourceText = null;
         if (null !== $sourceLocaleCode) {
             $sourceText = $this->fieldValue($product, $sourceLocaleCode, $field);
-            if (null === $sourceText || '' === trim($sourceText)) {
+            if (null === $sourceText || '' === trim(html_entity_decode(strip_tags($sourceText), \ENT_QUOTES | \ENT_HTML5, 'UTF-8'))) {
                 throw new SuggestionException('tmonier_ai_copilot.error.empty_source', ['%locale%' => $sourceLocaleCode]);
             }
             $prompt = $this->promptBuilder->buildTranslation($field, $facts, $sourceLocaleCode, $sourceText);

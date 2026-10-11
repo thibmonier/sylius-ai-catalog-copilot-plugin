@@ -103,8 +103,17 @@ class AiProvenance implements AiProvenanceInterface
         return null !== $currentText && hash_equals($this->contentHash, self::hash($currentText));
     }
 
-    private static function hash(string $text): string
+    /**
+     * Hash of the normalised text: browsers submit textarea line breaks as CRLF and forms may
+     * trim, so a product saved without touching the field must keep its AI marking.
+     */
+    public static function hash(string $text): string
     {
-        return hash('sha256', $text);
+        return hash('sha256', self::normalize($text));
+    }
+
+    public static function normalize(string $text): string
+    {
+        return trim(str_replace(["\r\n", "\r"], "\n", $text));
     }
 }

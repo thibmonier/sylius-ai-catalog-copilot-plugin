@@ -39,9 +39,11 @@ tmonier_ai_copilot:
         meta_description: "Meta description"
         meta_keywords: "Meta keywords"
     provenance:
+        demo: "demo text, not AI"
         generated: "AI-generated"
         edited: "AI-assisted, edited"
     warning:
+        environmental_claim_substantiated: "Environmental claim \"%claim%\" kept, substantiated by %evidence%: check it."
         environmental_claim_removed: "Unsubstantiated environmental claim \"%claim%\" removed (Directive (EU) 2024/825)."
         environmental_claim_flagged: "Unsubstantiated environmental claim \"%claim%\": check it before accepting (Directive (EU) 2024/825)."
         truncated: "Shortened to %max% characters."

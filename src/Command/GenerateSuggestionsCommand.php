@@ -6,6 +6,7 @@ namespace Tmonier\SyliusAiCatalogCopilotPlugin\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Sylius\Component\Core\Model\ProductInterface;
+use Sylius\Component\Core\Model\ProductTranslationInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,6 +26,8 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Suggestion\SuggestionGeneratorInterface
 #[AsCommand(name: 'tmonier:ai-copilot:generate', description: 'Generate pending AI suggestions for a product field')]
 final class GenerateSuggestionsCommand extends Command
 {
+    private const BATCH_SIZE = 100;
+
     /**
      * @param class-string<ProductInterface> $productClass
      * @param class-string<AiSuggestionInterface> $suggestionClass
@@ -49,6 +52,8 @@ final class GenerateSuggestionsCommand extends Command
             ->addOption('only-empty', null, InputOption::VALUE_NONE, 'Only products whose field is empty in the locale')
             ->addOption('product', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Product code (repeatable)')
             ->addOption('limit', null, InputOption::VALUE_REQUIRED, 'Maximum number of products (capped by max_products_per_run)')
+            ->addOption('after-id', null, InputOption::VALUE_REQUIRED, 'Only products with a greater id (cursor printed at the end of a run)')
+            ->addOption('include-processed', null, InputOption::VALUE_NONE, 'Also products whose field already has an accepted or rejected suggestion in the locale')
             ->addOption('dry-run', null, InputOption::VALUE_NONE, 'List the products without calling the generator')
         ;
     }
@@ -69,24 +74,41 @@ final class GenerateSuggestionsCommand extends Command
             return Command::INVALID;
         }
 
-        $limit = $this->maxProductsPerRun;
-        $limitOption = $input->getOption('limit');
-        if (is_string($limitOption) && ctype_digit($limitOption) && (int) $limitOption > 0) {
-            $limit = min($limit, (int) $limitOption);
+        $limit = $this->positiveIntegerOption($input, 'limit');
+        $afterId = $this->positiveIntegerOption($input, 'after-id', true);
+        if (false === $limit || false === $afterId) {
+            $io->error('--limit must be a positive integer and --after-id a non-negative integer.');
+
+            return Command::INVALID;
         }
+        $limit = min($this->maxProductsPerRun, $limit ?? $this->maxProductsPerRun);
 
         /** @var list<string> $codes */
         $codes = $input->getOption('product');
-        $products = $this->findProducts($field, $localeCode, $sourceLocaleCode, (bool) $input->getOption('only-empty'), $codes, $limit);
+        $products = $this->findProducts(
+            $field,
+            $localeCode,
+            $sourceLocaleCode,
+            (bool) $input->getOption('only-empty'),
+            (bool) $input->getOption('include-processed'),
+            $codes,
+            $afterId ?? 0,
+            $limit,
+        );
         if ([] === $products) {
             $io->success('No product to process.');
 
             return Command::SUCCESS;
         }
+        $lastProduct = $products[array_key_last($products)];
+        $cursor = sprintf('Next run: add --after-id=%d to continue after the last product of this run.', (int) $lastProduct->getId());
 
         if ((bool) $input->getOption('dry-run')) {
             $io->listing(array_map(static fn (ProductInterface $product): string => (string) $product->getCode(), $products));
             $io->note(sprintf('%d product(s) would get a "%s" suggestion in %s (dry run, nothing generated).', count($products), $field, $localeCode));
+            if (count($products) === $limit) {
+                $io->writeln($cursor);
+            }
 
             return Command::SUCCESS;
         }
@@ -105,42 +127,105 @@ final class GenerateSuggestionsCommand extends Command
         }
 
         $io->success(sprintf('%d suggestion(s) generated, %d failure(s). Review them in the admin "AI suggestions" grid.', $generated, $failed));
+        if (count($products) === $limit) {
+            $io->writeln($cursor);
+        }
 
         return 0 === $failed ? Command::SUCCESS : Command::FAILURE;
     }
 
+    /** Null when the option is absent, false when it is not a positive (or, with $allowZero, non-negative) integer. */
+    private function positiveIntegerOption(InputInterface $input, string $name, bool $allowZero = false): int|false|null
+    {
+        $value = $input->getOption($name);
+        if (null === $value) {
+            return null;
+        }
+        if (!is_string($value) || !ctype_digit($value) || (!$allowZero && 0 === (int) $value)) {
+            return false;
+        }
+
+        return (int) $value;
+    }
+
     /**
-     * Products translated in the locale, without a pending suggestion for the field.
+     * Products translated in the locale, by increasing id after the cursor, without a pending
+     * suggestion for the field (nor a decided one unless $includeProcessed). Emptiness is checked
+     * in PHP: whitespace or markup only counts as empty.
      *
      * @param list<string> $codes
      *
      * @return list<ProductInterface>
      */
-    private function findProducts(string $field, string $localeCode, ?string $sourceLocaleCode, bool $onlyEmpty, array $codes, int $limit): array
+    private function findProducts(
+        string $field,
+        string $localeCode,
+        ?string $sourceLocaleCode,
+        bool $onlyEmpty,
+        bool $includeProcessed,
+        array $codes,
+        int $afterId,
+        int $limit,
+    ): array {
+        $products = [];
+        while (count($products) < $limit) {
+            $batch = $this->findCandidates($field, $localeCode, $sourceLocaleCode, $includeProcessed, $codes, $afterId);
+            if ([] === $batch) {
+                break;
+            }
+
+            foreach ($batch as $product) {
+                $afterId = (int) $product->getId();
+                $translations = $product->getTranslations();
+                $target = $translations->get($localeCode);
+                $source = null === $sourceLocaleCode ? null : $translations->get($sourceLocaleCode);
+                if ($onlyEmpty && $target instanceof ProductTranslationInterface && !self::isBlank(ProductField::getValue($target, $field))) {
+                    continue;
+                }
+                if (null !== $sourceLocaleCode && (!$source instanceof ProductTranslationInterface || self::isBlank(ProductField::getValue($source, $field)))) {
+                    continue;
+                }
+
+                $products[] = $product;
+                if (count($products) >= $limit) {
+                    break;
+                }
+            }
+        }
+
+        return $products;
+    }
+
+    /**
+     * @param list<string> $codes
+     *
+     * @return list<ProductInterface>
+     */
+    private function findCandidates(string $field, string $localeCode, ?string $sourceLocaleCode, bool $includeProcessed, array $codes, int $afterId): array
     {
-        $property = ProductField::property($field);
         $queryBuilder = $this->entityManager->createQueryBuilder()
             ->select('product')
             ->from($this->productClass, 'product')
             ->innerJoin('product.translations', 'translation', 'WITH', 'translation.locale = :locale')
+            ->andWhere('product.id > :afterId')
             ->andWhere(sprintf(
-                'NOT EXISTS (SELECT suggestion.id FROM %s suggestion WHERE suggestion.product = product AND suggestion.localeCode = :locale AND suggestion.field = :field AND suggestion.status = :pending)',
+                'NOT EXISTS (SELECT suggestion.id FROM %s suggestion WHERE suggestion.product = product AND suggestion.localeCode = :locale AND suggestion.field = :field%s)',
                 $this->suggestionClass,
+                $includeProcessed ? ' AND suggestion.status = :pending' : '',
             ))
             ->setParameter('locale', $localeCode)
             ->setParameter('field', $field)
-            ->setParameter('pending', AiSuggestionInterface::STATUS_PENDING)
+            ->setParameter('afterId', $afterId)
             ->orderBy('product.id', 'ASC')
-            ->setMaxResults($limit)
+            ->setMaxResults(self::BATCH_SIZE)
         ;
 
-        if ($onlyEmpty) {
-            $queryBuilder->andWhere(sprintf("translation.%1\$s IS NULL OR translation.%1\$s = ''", $property));
+        if ($includeProcessed) {
+            $queryBuilder->setParameter('pending', AiSuggestionInterface::STATUS_PENDING);
         }
         if (null !== $sourceLocaleCode) {
             $queryBuilder
                 ->innerJoin('product.translations', 'source', 'WITH', 'source.locale = :sourceLocale')
-                ->andWhere(sprintf("source.%1\$s IS NOT NULL AND source.%1\$s <> ''", $property))
                 ->setParameter('sourceLocale', $sourceLocaleCode)
             ;
         }
@@ -152,5 +237,17 @@ final class GenerateSuggestionsCommand extends Command
         $products = $queryBuilder->getQuery()->getResult();
 
         return $products;
+    }
+
+    /** Empty for a reader: nothing left once markup, entities and whitespace are removed. */
+    private static function isBlank(?string $text): bool
+    {
+        if (null === $text) {
+            return true;
+        }
+
+        $text = html_entity_decode(strip_tags($text), \ENT_QUOTES | \ENT_HTML5, 'UTF-8');
+
+        return '' === trim((string) preg_replace('/[\s\x{00A0}\x{200B}]+/u', '', $text));
     }
 }

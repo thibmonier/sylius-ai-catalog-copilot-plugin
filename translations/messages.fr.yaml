@@ -39,9 +39,11 @@ tmonier_ai_copilot:
         meta_description: "Méta-description"
         meta_keywords: "Méta-mots-clés"
     provenance:
+        demo: "texte de démonstration, pas d'IA"
         generated: "généré par IA"
         edited: "assisté par IA, modifié"
     warning:
+        environmental_claim_substantiated: "Allégation environnementale « %claim% » conservée, étayée par %evidence% : vérifiez-la."
         environmental_claim_removed: "Allégation environnementale non étayée « %claim% » retirée (directive (UE) 2024/825)."
         environmental_claim_flagged: "Allégation environnementale non étayée « %claim% » : vérifiez-la avant d'accepter (directive (UE) 2024/825)."
         truncated: "Raccourci à %max% caractères."

@@ -32,4 +32,15 @@ final class AiProvenanceTest extends TestCase
         self::assertFalse($provenance->matches('A linen shirt, rewritten.'));
         self::assertFalse($provenance->matches(null));
     }
+
+    public function testLineEndingsAndSurroundingWhitespaceDoNotCountAsAnEdit(): void
+    {
+        $provenance = new AiProvenance();
+        $provenance->record(new AiSuggestion(), "Para 1.\n\nPara 2.", new \DateTimeImmutable());
+
+        self::assertTrue($provenance->matches("Para 1.\r\n\r\nPara 2."));
+        self::assertTrue($provenance->matches("  Para 1.\r\rPara 2.\n"));
+        self::assertSame(AiProvenance::hash("Para 1.\n\nPara 2."), $provenance->getContentHash());
+        self::assertFalse($provenance->matches("Para 1.\nPara 2."));
+    }
 }

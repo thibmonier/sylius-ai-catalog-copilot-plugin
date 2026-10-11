@@ -59,12 +59,50 @@ final class ContentGuardTest extends TestCase
 
     public function testClaimsBackedByAnEcolabelAttributeAreKept(): void
     {
-        $facts = new ProductFacts('en_US', 'SHIRT', 'Shirt', [], [['name' => 'Certification', 'value' => 'EU Ecolabel']]);
+        $facts = new ProductFacts('en_US', 'SHIRT', 'Shirt', [], [['name' => 'Certification', 'value' => 'EU Ecolabel', 'code' => 'certification']]);
 
         $result = $this->guard()->apply(ProductField::DESCRIPTION, 'An eco-friendly shirt.', $facts);
 
         self::assertSame('An eco-friendly shirt.', $result->text);
-        self::assertSame([], $result->warnings);
+        // The reviewer sees why the claim was kept.
+        self::assertSame([[
+            'code' => 'environmental_claim_substantiated',
+            'params' => ['claim' => 'eco-friendly', 'type' => 'generic', 'evidence' => 'Certification: EU Ecolabel'],
+        ]], $result->warnings);
+    }
+
+    public function testANegativeEcolabelAttributeDoesNotKeepTheClaim(): void
+    {
+        $facts = new ProductFacts('en_US', 'SHIRT', 'Shirt', [], [['name' => 'Ecolabel', 'value' => 'no', 'code' => 'ecolabel']]);
+
+        $result = $this->guard()->apply(ProductField::DESCRIPTION, 'A cotton shirt. An eco-friendly shirt.', $facts);
+
+        self::assertSame('A cotton shirt.', $result->text);
+        self::assertSame('environmental_claim_removed', $result->warnings[0]['code']);
+    }
+
+    public function testElementsOutsideTheTextSetKeepTheirText(): void
+    {
+        $guard = $this->guard();
+
+        self::assertSame('Hello world text', $guard->apply(ProductField::DESCRIPTION, '<article><p>Hello world text</p></article>', $this->facts())->text);
+        self::assertSame("Intro.\n\nWeight 2kg\nSize XL", $guard->apply(ProductField::DESCRIPTION, 'Intro.<table><tr><td>Weight</td><td>2kg</td></tr><tr><th>Size</th><td>XL</td></tr></table>', $this->facts())->text);
+        self::assertSame("Weight\n2kg", $guard->apply(ProductField::DESCRIPTION, '<dl><dt>Weight</dt><dd>2kg</dd></dl>', $this->facts())->text);
+        self::assertSame('Size XL fits', $guard->apply(ProductField::SHORT_DESCRIPTION, 'Size <q>XL</q> fits', $this->facts())->text);
+        self::assertSame('Main text', $guard->apply(ProductField::DESCRIPTION, '<main><custom-tag>Main text</custom-tag></main>', $this->facts())->text);
+    }
+
+    public function testDangerousElementsAreDroppedWithTheirContent(): void
+    {
+        $text = 'Shirt.<style>p{}</style><iframe src="x">frame</iframe><template>tpl</template><object>obj</object><svg><text>svg</text></svg><noscript>ns</noscript>';
+
+        self::assertSame('Shirt.', $this->guard()->apply(ProductField::DESCRIPTION, $text, $this->facts())->text);
+    }
+
+    public function testMarkdownCodeFencesAreRemoved(): void
+    {
+        self::assertSame('A linen shirt.', $this->guard()->apply(ProductField::DESCRIPTION, "```html\n<p>A linen shirt.</p>\n```", $this->facts())->text);
+        self::assertSame('A linen shirt.', $this->guard()->apply(ProductField::META_DESCRIPTION, "```\nA linen shirt.\n```", $this->facts())->text);
     }
 
     public function testMetaDescriptionIsOneLineTruncatedAtAWordBoundary(): void

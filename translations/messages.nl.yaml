@@ -39,9 +39,11 @@ tmonier_ai_copilot:
         meta_description: "Metabeschrijving"
         meta_keywords: "Metatrefwoorden"
     provenance:
+        demo: "demotekst, geen AI"
         generated: "AI-gegenereerd"
         edited: "AI-ondersteund, bewerkt"
     warning:
+        environmental_claim_substantiated: "Milieuclaim „%claim%” behouden, onderbouwd door %evidence%: controleer deze."
         environmental_claim_removed: "Niet-onderbouwde milieuclaim „%claim%” verwijderd (Richtlijn (EU) 2024/825)."
         environmental_claim_flagged: "Niet-onderbouwde milieuclaim „%claim%”: controleer vóór het accepteren (Richtlijn (EU) 2024/825)."
         truncated: "Ingekort tot %max% tekens."

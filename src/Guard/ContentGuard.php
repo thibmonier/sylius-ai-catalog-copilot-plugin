@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tmonier\SyliusAiCatalogCopilotPlugin\Guard;
 
 use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerAction;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Facts\ProductFacts;
@@ -25,9 +26,11 @@ final class ContentGuard implements ContentGuardInterface
 
     public const CLAIMS_FLAG = 'flag';
 
-    private const TEXT_ELEMENTS = [
-        'a', 'abbr', 'b', 'blockquote', 'br', 'code', 'div', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'i', 'li',
-        'mark', 'ol', 'p', 'section', 'small', 'span', 'strong', 'sub', 'sup', 'u', 'ul',
+    /** Elements removed with their content; every other element is removed but its text is kept. */
+    private const DROPPED_ELEMENTS = [
+        'applet', 'audio', 'base', 'button', 'canvas', 'embed', 'form', 'frame', 'frameset', 'head', 'iframe',
+        'img', 'input', 'link', 'math', 'meta', 'noembed', 'noframes', 'noscript', 'object', 'option', 'param',
+        'picture', 'script', 'select', 'source', 'style', 'svg', 'template', 'textarea', 'title', 'track', 'video',
     ];
 
     private readonly HtmlSanitizerInterface $sanitizer;
@@ -39,9 +42,9 @@ final class ContentGuard implements ContentGuardInterface
         ?HtmlSanitizerInterface $sanitizer = null,
     ) {
         if (null === $sanitizer) {
-            $config = new HtmlSanitizerConfig();
-            foreach (self::TEXT_ELEMENTS as $element) {
-                $config = $config->blockElement($element);
+            $config = (new HtmlSanitizerConfig())->defaultAction(HtmlSanitizerAction::Block);
+            foreach (self::DROPPED_ELEMENTS as $element) {
+                $config = $config->dropElement($element);
             }
             $sanitizer = new HtmlSanitizer($config->withMaxInputLength(-1));
         }
@@ -56,7 +59,14 @@ final class ContentGuard implements ContentGuardInterface
             $text = $this->normalizeKeywords($text);
         }
 
-        $claims = $this->claimDetector->findUnsubstantiated($text, $facts->attributesText());
+        $analysis = $this->claimDetector->analyse($text, $facts);
+        $claims = $analysis['unsubstantiated'];
+        foreach ($analysis['substantiated'] as $claim) {
+            $warnings[] = [
+                'code' => 'environmental_claim_substantiated',
+                'params' => ['claim' => $claim['claim'], 'type' => $claim['type'], 'evidence' => $claim['evidence']],
+            ];
+        }
         foreach ($claims as $claim) {
             $warnings[] = [
                 'code' => self::CLAIMS_REMOVE === $this->claimsMode ? 'environmental_claim_removed' : 'environmental_claim_flagged',
@@ -87,9 +97,16 @@ final class ContentGuard implements ContentGuardInterface
 
     private function toPlainText(string $text, bool $singleLine): string
     {
+        // Markdown code fences some models wrap their answer in.
+        $text = (string) preg_replace('/^[ \t]*```[\w-]*[ \t]*$/mu', '', $text);
+        // Raw-text elements first: the HTML parser may move them out of the body before sanitizing.
+        $text = (string) preg_replace('#<(script|style|template|noscript|iframe|object|svg|math|textarea|title)\b[^>]*>.*?</\1\s*>#isu', '', $text);
         // Keep the structure of HTML answers as line breaks before the markup is removed.
+        $text = (string) preg_replace('#<(table|ul|ol|dl|pre|figure)\b#i', "\n\n$0", $text);
         $text = (string) preg_replace('#<br\s*/?>#i', "\n", $text);
-        $text = (string) preg_replace('#</(p|div|h[1-6]|li|blockquote|section)>#i', "$0\n\n", $text);
+        $text = (string) preg_replace('#</(p|div|h[1-6]|li|blockquote|section|article|main|header|footer|aside|table|ul|ol|dl|pre|figure)>#i', "$0\n\n", $text);
+        $text = (string) preg_replace('#</(tr|dt|dd|caption)>#i', "$0\n", $text);
+        $text = (string) preg_replace('#</(td|th)>#i', '$0 ', $text);
         $text = (string) preg_replace('#<li[^>]*>#i', '$0- ', $text);
         // Markdown emphasis and headings some models add anyway.
         $text = (string) preg_replace('/(\*\*|__)(.+?)\1/u', '$2', $text);

@@ -11,6 +11,7 @@ use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductTranslationInterface;
 use Sylius\Resource\Factory\FactoryInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiProvenance;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiProvenanceInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Event\AiSuggestionAccepted;
@@ -89,6 +90,6 @@ final class SuggestionApplier implements SuggestionApplierInterface
 
     private static function normalize(?string $text): string
     {
-        return trim(str_replace(["\r\n", "\r"], "\n", (string) $text));
+        return AiProvenance::normalize((string) $text);
     }
 }

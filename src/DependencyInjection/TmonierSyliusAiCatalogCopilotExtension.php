@@ -20,7 +20,7 @@ final class TmonierSyliusAiCatalogCopilotExtension extends AbstractResourceExten
 
     public function load(array $configs, ContainerBuilder $container): void
     {
-        /** @var array{generator: array{type: string, platform: ?string, model: ?string, options: array<string, mixed>, service: ?string}, source_locale: ?string, max_products_per_run: int, environmental_claims: array{mode: string, recognised_labels: array<string>}, limits: array<string, array{min?: int, max?: int}>, provenance: array{enabled: bool, shop_notice: bool}, driver: string, resources: array<string, mixed>} $config */
+        /** @var array{generator: array{type: string, platform: ?string, model: ?string, options: array<string, mixed>, service: ?string}, source_locale: ?string, max_products_per_run: int, environmental_claims: array{mode: string, recognised_labels: array<string>, ecolabel_attributes: array<string>, biodegradable_attributes: array<string>}, limits: array<string, array{min?: int, max?: int}>, provenance: array{enabled: bool, shop_notice: bool}, driver: string, resources: array<string, mixed>} $config */
         $config = $this->processConfiguration(new Configuration(), $configs);
 
         $this->registerResources('tmonier_ai_copilot', $config['driver'], $config['resources'], $container);
@@ -30,6 +30,8 @@ final class TmonierSyliusAiCatalogCopilotExtension extends AbstractResourceExten
         $container->setParameter('tmonier_ai_copilot.max_products_per_run', $config['max_products_per_run']);
         $container->setParameter('tmonier_ai_copilot.environmental_claims.mode', $config['environmental_claims']['mode']);
         $container->setParameter('tmonier_ai_copilot.environmental_claims.recognised_labels', array_values($config['environmental_claims']['recognised_labels']));
+        $container->setParameter('tmonier_ai_copilot.environmental_claims.ecolabel_attributes', array_values($config['environmental_claims']['ecolabel_attributes']));
+        $container->setParameter('tmonier_ai_copilot.environmental_claims.biodegradable_attributes', array_values($config['environmental_claims']['biodegradable_attributes']));
         $container->setParameter('tmonier_ai_copilot.limits', $config['limits']);
         $container->setParameter('tmonier_ai_copilot.provenance.enabled', $config['provenance']['enabled']);
 

@@ -39,9 +39,11 @@ tmonier_ai_copilot:
         meta_description: "Meta description"
         meta_keywords: "Meta keyword"
     provenance:
+        demo: "testo demo, non IA"
         generated: "generato da IA"
         edited: "assistito da IA, modificato"
     warning:
+        environmental_claim_substantiated: "Asserzione ambientale «%claim%» mantenuta, comprovata da %evidence%: verificala."
         environmental_claim_removed: "Asserzione ambientale non comprovata «%claim%» rimossa (direttiva (UE) 2024/825)."
         environmental_claim_flagged: "Asserzione ambientale non comprovata «%claim%»: verificala prima di accettare (direttiva (UE) 2024/825)."
         truncated: "Accorciato a %max% caratteri."

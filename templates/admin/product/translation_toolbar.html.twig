@@ -44,7 +44,7 @@
                 {% endif %}
                 {% for field, provenance in tmonier_ai_copilot_all_provenances(product, locale) %}
                     <span class="badge {{ provenance.aiGenerated ? 'bg-purple-lt' : 'bg-secondary-lt' }}" title="{{ provenance.model }} - {{ provenance.generatedAt|format_datetime('medium', 'short') }}" {{ sylius_test_html_attribute('tmonier-ai-copilot-provenance', field ~ '|' ~ locale) }}>
-                        {{ ('tmonier_ai_copilot.field.' ~ field)|trans }}: {{ ('tmonier_ai_copilot.provenance.' ~ provenance.status)|trans }}
+                        {{ ('tmonier_ai_copilot.field.' ~ field)|trans }}: {{ ('tmonier_ai_copilot.provenance.' ~ provenance.label)|trans }}
                     </span>
                 {% endfor %}
                 <span class="text-secondary small">{{ 'tmonier_ai_copilot.ui.unsaved_changes_lost'|trans }}</span>

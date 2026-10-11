@@ -11,7 +11,7 @@ final class ProductFacts
 {
     /**
      * @param list<string> $taxons main taxon first
-     * @param list<array{name: string, value: string}> $attributes
+     * @param list<array{name: string, value: string, code?: string}> $attributes
      * @param list<array{name: string, values: list<string>}> $options
      */
     public function __construct(
@@ -22,16 +22,5 @@ final class ProductFacts
         public readonly array $attributes = [],
         public readonly array $options = [],
     ) {
-    }
-
-    /** Lower-cased text of every attribute name and value, used to substantiate claims. */
-    public function attributesText(): string
-    {
-        $parts = [];
-        foreach ($this->attributes as $attribute) {
-            $parts[] = $attribute['name'] . ': ' . $attribute['value'];
-        }
-
-        return mb_strtolower(implode("\n", $parts));
     }
 }

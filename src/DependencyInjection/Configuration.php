@@ -15,6 +15,7 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiProvenanceInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestion;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Guard\ContentGuard;
+use Tmonier\SyliusAiCatalogCopilotPlugin\Guard\EnvironmentalClaimDetector;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Model\ProductField;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Repository\AiProvenanceRepository;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Repository\AiSuggestionRepository;
@@ -76,8 +77,18 @@ final class Configuration implements ConfigurationInterface
                             ->defaultValue(ContentGuard::CLAIMS_REMOVE)
                         ->end()
                         ->arrayNode('recognised_labels')
-                            ->info('Extra ecolabel names which, found in a product attribute, substantiate a generic claim.')
+                            ->info('Extra recognised ecolabel names (EN ISO 14024 type I) besides the built-in list.')
                             ->scalarPrototype()->cannotBeEmpty()->end()
+                        ->end()
+                        ->arrayNode('ecolabel_attributes')
+                            ->info('Codes of the product attributes holding an ecolabel: a positive value naming a recognised label substantiates generic claims.')
+                            ->scalarPrototype()->cannotBeEmpty()->end()
+                            ->defaultValue(EnvironmentalClaimDetector::ECOLABEL_ATTRIBUTES)
+                        ->end()
+                        ->arrayNode('biodegradable_attributes')
+                            ->info('Codes of the product attributes stating biodegradability: a positive value substantiates "biodegradable".')
+                            ->scalarPrototype()->cannotBeEmpty()->end()
+                            ->defaultValue(EnvironmentalClaimDetector::BIODEGRADABLE_ATTRIBUTES)
                         ->end()
                     ->end()
                 ->end()
