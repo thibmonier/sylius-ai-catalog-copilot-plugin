@@ -1,5 +1,6 @@
 tmonier_ai_copilot:
     ui:
+        claims_to_check: "Allégations environnementales à vérifier avant d'accepter (directive (UE) 2024/825) : %claims%. Ne les gardez que si elles sont étayées, sinon rejetez la suggestion."
         ai_suggestions: "Suggestions IA"
         ai_suggestion: "Suggestion IA"
         field: "Champ"

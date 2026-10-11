@@ -1,0 +1,8 @@
+{# Shown before the decision buttons while a suggestion keeps environmental claims to check. #}
+{% set claims = tmonier_ai_copilot_flagged_claims(suggestion.warnings) %}
+{% if claims is not empty and suggestion.pending %}
+    <div class="alert alert-warning py-2 mb-2" role="alert" {{ sylius_test_html_attribute('tmonier-ai-copilot-claims-alert', suggestion.id) }}>
+        {{ ux_icon('tabler:leaf', {'class': 'icon alert-icon'}) }}
+        {{ 'tmonier_ai_copilot.ui.claims_to_check'|trans({'%claims%': claims|join(', ')}) }}
+    </div>
+{% endif %}

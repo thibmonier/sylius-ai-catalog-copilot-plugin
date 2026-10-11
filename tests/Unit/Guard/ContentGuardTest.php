@@ -33,7 +33,7 @@ final class ContentGuardTest extends TestCase
 
     public function testUnsubstantiatedClaimsAreRemovedWithTheirSentence(): void
     {
-        $result = $this->guard()->apply(
+        $result = $this->removingGuard()->apply(
             ProductField::DESCRIPTION,
             "A soft cotton shirt. It is eco-friendly and sustainable! Machine washable.\n\nCarbon neutral delivery.",
             $this->facts(),
@@ -59,10 +59,26 @@ final class ContentGuardTest extends TestCase
 
     public function testClaimsWrittenWithUnicodeHyphensAreRemoved(): void
     {
-        $result = $this->guard()->apply(ProductField::DESCRIPTION, 'Eco‑friendly packaging. Soft cotton. A carbon–neutral delivery.', $this->facts());
+        $result = $this->removingGuard()->apply(ProductField::DESCRIPTION, 'Eco‑friendly packaging. Soft cotton. A carbon–neutral delivery.', $this->facts());
 
         self::assertSame('Soft cotton.', $result->text);
         self::assertCount(2, $result->warnings);
+    }
+
+    public function testByDefaultClaimsAreFlaggedButNeutralityClaimsAreRemoved(): void
+    {
+        $result = $this->guard()->apply(
+            ProductField::DESCRIPTION,
+            'A soft cotton shirt. It is eco-friendly and sustainable! Shipped carbon neutral. Machine washable.',
+            $this->facts(),
+        );
+
+        self::assertSame('A soft cotton shirt. It is eco-friendly and sustainable! Machine washable.', $result->text);
+        self::assertSame([
+            ['code' => 'environmental_claim_flagged', 'params' => ['claim' => 'eco-friendly', 'type' => 'generic']],
+            ['code' => 'environmental_claim_flagged', 'params' => ['claim' => 'sustainable', 'type' => 'generic']],
+            ['code' => 'environmental_claim_removed', 'params' => ['claim' => 'carbon neutral', 'type' => 'carbon_neutral']],
+        ], $result->warnings);
     }
 
     public function testClaimsCanOnlyBeFlagged(): void
@@ -93,7 +109,7 @@ final class ContentGuardTest extends TestCase
     {
         $facts = new ProductFacts('en_US', 'SHIRT', 'Shirt', [], [['name' => 'Ecolabel', 'value' => 'no', 'code' => 'ecolabel']]);
 
-        $result = $this->guard()->apply(ProductField::DESCRIPTION, 'A cotton shirt. An eco-friendly shirt.', $facts);
+        $result = $this->removingGuard()->apply(ProductField::DESCRIPTION, 'A cotton shirt. An eco-friendly shirt.', $facts);
 
         self::assertSame('A cotton shirt.', $result->text);
         self::assertSame('environmental_claim_removed', $result->warnings[0]['code']);
@@ -146,7 +162,7 @@ final class ContentGuardTest extends TestCase
 
     public function testMetaKeywordsAreNormalizedDeduplicatedAndClaimsRemoved(): void
     {
-        $result = $this->guard()->apply(ProductField::META_KEYWORDS, "Shirt, COTTON; shirt\nEco-friendly, summer.", $this->facts());
+        $result = $this->removingGuard()->apply(ProductField::META_KEYWORDS, "Shirt, COTTON; shirt\nEco-friendly, summer.", $this->facts());
 
         self::assertSame('shirt, cotton, summer', $result->text);
         self::assertSame('environmental_claim_removed', $result->warnings[0]['code']);
@@ -157,6 +173,11 @@ final class ContentGuardTest extends TestCase
         $guard = new ContentGuard(new EnvironmentalClaimDetector(), new FieldLimits([ProductField::META_KEYWORDS => ['max' => 20]]));
 
         self::assertSame('shirt, cotton', $guard->apply(ProductField::META_KEYWORDS, 'shirt, cotton, summer wear', $this->facts())->text);
+    }
+
+    private function removingGuard(): ContentGuard
+    {
+        return new ContentGuard(new EnvironmentalClaimDetector(), new FieldLimits(), ContentGuard::CLAIMS_REMOVE);
     }
 
     private function guard(): ContentGuard

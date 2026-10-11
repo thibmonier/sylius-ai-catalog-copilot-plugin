@@ -111,8 +111,12 @@ modified.
      (EU Ecolabel, Blauer Engel, Nordic Swan... + configurable list) or an affirmative value on an
      attribute named after such a label; "biodegradable" a `biodegradable_attributes` code whose
      value starts with an explicit affirmative word or names a compostability standard; neutrality claims never. Mode
-     `remove` (default) drops the sentence (or keyword) containing the claim, `flag` keeps it;
-     both add a warning, and a substantiated claim adds a warning with its evidence.
+     `flag` (default, product decision of 2026-10-11) keeps the claim, highlights it (`<mark>`)
+     in the suggestion page, the product page card and the grid, and shows an alert before the
+     accept buttons; `remove` drops the sentence (or keyword) containing the claim. Carbon /
+     climate neutrality, net zero and offsetting claims are removed in both modes (banned
+     outright, Annex I point 4c). Every claim adds a warning; a substantiated claim adds a
+     warning with its evidence.
    - Meta keywords normalised (lower case, comma separated, deduplicated).
    - Length: truncated at a word boundary (keywords: whole keywords) above the maximum, warning
      below the minimum. Defaults: description 5000, short description 1000, meta description

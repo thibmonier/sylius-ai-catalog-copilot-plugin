@@ -24,7 +24,7 @@ Nothing is written on a product until an administrator accepts it.
 | Review in bulk | **AI suggestions grid** (Catalog menu) with filters (state, field, product, locale), accept / reject per row and **bulk accept / reject**. |
 | Never overwrite a human | A suggestion is refused when the field changed since it was generated. Older pending suggestions of the same field are rejected when a new one is generated. |
 | Facts, not hallucinations | Prompts give the model the product name, categories, attributes and options as the **only facts** it may state. They never contain customer data. |
-| EU environmental claims | Generic claims ("eco-friendly", "green", "energy efficient", "écologique", "nachhaltigen", "ekologicznego", "biodegradable", "carbon neutral"... with their inflections in 7 languages) not backed by an ecolabel attribute are **removed** (or only flagged); claims kept thanks to an attribute are shown to the reviewer. See [Legal](#legal-notes). |
+| EU environmental claims | Generic claims ("eco-friendly", "green", "energy efficient", "écologique", "nachhaltigen", "ekologicznego", "biodegradable", "carbon neutral"... with their inflections in 7 languages) not backed by an ecolabel attribute are **flagged**: highlighted in the text, with a warning in the grid, the product page and the comparison page, before the reviewer accepts. Carbon / climate neutrality, net zero and offsetting claims (banned outright) are **always removed**. A `remove` mode removes every unsubstantiated claim. See [Legal](#legal-notes). |
 | Clean output | Plain text only (HTML through Symfony HtmlSanitizer: the text of any element is kept, tables and lists become lines, scripts, styles and embeds are dropped, Markdown fences removed), length limits (meta description 50-160 characters, truncated on a word boundary), warnings shown on the suggestion. |
 | Know what was AI-written | **Provenance markers**: model and dates stored for each field written from a suggestion, a badge in the admin, an optional shop notice and `data-ai-*` attributes. Texts of the demo generator are never presented as AI-generated. |
 | Bulk generation | `tmonier:ai-copilot:generate --field=description --locale=en_US --only-empty` creates pending suggestions for many products (capped per run, with a cursor to continue). |
@@ -144,7 +144,8 @@ tmonier_sylius_ai_catalog_copilot:
     source_locale: ~                # locale of the "Translate from" buttons, default %locale%
     max_products_per_run: 50        # cap of tmonier:ai-copilot:generate
     environmental_claims:
-        mode: remove                # remove | flag
+        mode: flag                  # flag (default): keep and highlight for the reviewer | remove
+                                    # neutrality / net zero / offsetting claims are removed in both modes
         recognised_labels: []       # extra recognised ecolabel names (EN ISO 14024 type I)
         ecolabel_attributes: [ecolabel, eco_label, eu_ecolabel, environmental_label, certification, certifications]
         biodegradable_attributes: [biodegradable, biodegradability, compostable, compostability]
@@ -229,21 +230,27 @@ Both are optional: this plugin depends on neither.
   27 September 2026: generic environmental claims ("eco-friendly", "green", "climate friendly",
   "biodegradable"...) are banned unless the product has a recognised excellent environmental
   performance (EU Ecolabel, an EN ISO 14024 type I ecolabel...), and claims of climate
-  neutrality based on offsetting are banned. The prompts forbid such claims and the content
-  guard removes the unsubstantiated ones in seven languages (stems with their inflections).
+  neutrality based on offsetting are banned outright (Annex I point 4c). The prompts forbid such
+  claims, and the content guard looks for them in seven languages (stems with their
+  inflections). By default (`mode: flag`) an unsubstantiated claim is **kept and highlighted**:
+  the suggestion page, the product page and the grid mark it and warn the reviewer before
+  acceptance, so that the reviewer decides (keep it only if it is substantiated, otherwise edit
+  or reject). Carbon or climate neutrality, net zero, emissions-free and offsetting /
+  compensation claims are **always removed**, in every mode. `mode: remove` also removes the
+  sentences with other unsubstantiated claims.
   A generic claim is kept only when one of the `ecolabel_attributes` names a recognised label
   (e.g. *Certification: EU Ecolabel*) and the value contains no denying, expiry or pending word
   ("no", "not", "expired", "candidate", "pending", "abgelaufen"...); "biodegradable" or
   "compostable" only when one of the `biodegradable_attributes` starts with an explicit "yes"
-  (oui, ja, sí, tak, certified...) or names a compostability standard (EN 13432...). Carbon or
-  climate neutrality, net zero and offsetting claims are always removed. Colour words are claims
+  (oui, ja, sí, tak, certified...) or names a compostability standard (EN 13432...). Colour words are claims
   only in eco phrases ("green product", "greener", "produit vert"), never as plain colour
   adjectives, and not when the product name, attributes or option values give that colour.
   OEKO-TEX is not a claim. A kept claim is shown to the reviewer with the attribute that supports it.
 
-  **The guard is a best-effort keyword filter.** It misses claims phrased in other ways and can
-  occasionally remove a legitimate sentence (check the warnings). The administrator who accepts a
-  suggestion remains responsible for the published text: read every suggestion before accepting it. National
+  **The guard is a best-effort keyword filter, not legal advice.** It misses claims phrased in
+  other ways and can flag (or, for neutrality claims and in `remove` mode, remove) a legitimate
+  sentence: check the warnings. The administrator who accepts a suggestion remains responsible
+  for the published text: read every suggestion before accepting it. National
   transpositions vary (France was still discussing it in October 2026).
 - **Data protection**: prompts contain catalog data only, never customer data. Your provider's
   terms still apply to the product data you send; a self-hosted model avoids sending it.

@@ -15,7 +15,8 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Model\ProductField;
  * Post-processing of every generated text:
  *  1. plain text only (Sylius renders product texts escaped): markup goes through HtmlSanitizer,
  *     scripts and styles are dropped with their content;
- *  2. unsubstantiated environmental claims are removed (sentence or keyword) or only flagged;
+ *  2. unsubstantiated environmental claims are flagged to the reviewer (default) or removed
+ *     (sentence or keyword); carbon / climate neutrality and offsetting claims are always removed;
  *  3. length limits: truncated at a word boundary, flagged when too short.
  *
  * @phpstan-import-type Warning from \Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface
@@ -38,7 +39,7 @@ final class ContentGuard implements ContentGuardInterface
     public function __construct(
         private readonly EnvironmentalClaimDetector $claimDetector,
         private readonly FieldLimits $limits,
-        private readonly string $claimsMode = self::CLAIMS_REMOVE,
+        private readonly string $claimsMode = self::CLAIMS_FLAG,
         ?HtmlSanitizerInterface $sanitizer = null,
     ) {
         if (null === $sanitizer) {
@@ -67,14 +68,21 @@ final class ContentGuard implements ContentGuardInterface
                 'params' => ['claim' => $claim['claim'], 'type' => $claim['type'], 'evidence' => $claim['evidence']],
             ];
         }
+        // Carbon / climate neutrality and offsetting claims are banned outright (Annex I point 4c):
+        // always removed. Other claims are removed in "remove" mode, flagged to the reviewer otherwise.
+        $removed = [];
         foreach ($claims as $claim) {
+            $remove = self::CLAIMS_REMOVE === $this->claimsMode || EnvironmentalClaimDetector::TYPE_CARBON_NEUTRAL === $claim['type'];
+            if ($remove) {
+                $removed[] = $claim['claim'];
+            }
             $warnings[] = [
-                'code' => self::CLAIMS_REMOVE === $this->claimsMode ? 'environmental_claim_removed' : 'environmental_claim_flagged',
+                'code' => $remove ? 'environmental_claim_removed' : 'environmental_claim_flagged',
                 'params' => ['claim' => $claim['claim'], 'type' => $claim['type']],
             ];
         }
-        if ([] !== $claims && self::CLAIMS_REMOVE === $this->claimsMode) {
-            $text = $this->removeClaims($field, $text, array_column($claims, 'claim'));
+        if ([] !== $removed) {
+            $text = $this->removeClaims($field, $text, $removed);
         }
 
         if (ProductField::META_KEYWORDS === $field) {

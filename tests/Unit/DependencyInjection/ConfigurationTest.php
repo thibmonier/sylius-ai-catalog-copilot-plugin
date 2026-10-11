@@ -11,14 +11,14 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\DependencyInjection\Configuration;
 
 final class ConfigurationTest extends TestCase
 {
-    public function testDefaultsUseTheDemoGeneratorWithProvenanceAndClaimRemoval(): void
+    public function testDefaultsUseTheDemoGeneratorWithProvenanceAndFlaggedClaims(): void
     {
         $config = $this->process([]);
 
         self::assertSame('demo', $config['generator']['type']);
         self::assertTrue($config['provenance']['enabled']);
         self::assertFalse($config['provenance']['shop_notice']);
-        self::assertSame('remove', $config['environmental_claims']['mode']);
+        self::assertSame('flag', $config['environmental_claims']['mode']);
         self::assertSame(50, $config['max_products_per_run']);
         self::assertNull($config['source_locale']);
     }

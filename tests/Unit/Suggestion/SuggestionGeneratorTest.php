@@ -36,12 +36,13 @@ final class SuggestionGeneratorTest extends TestCase
 
     public function testItStoresAGuardedPendingSuggestionWithoutTouchingTheProduct(): void
     {
-        $generator = new FakeTextGenerator('<p>A linen shirt.</p> It is eco-friendly.');
+        $generator = new FakeTextGenerator('<p>A linen shirt.</p> It is eco-friendly. Carbon neutral delivery.');
         $product = $this->product(['en_US' => ['name' => 'Linen shirt', 'description' => 'Old text']]);
 
         $suggestion = $this->suggestionGenerator($generator)->generate($product, ProductField::DESCRIPTION, 'en_US');
 
-        self::assertSame('A linen shirt.', $suggestion->getSuggestedText());
+        // Flagged by default, neutrality claims always removed.
+        self::assertSame("A linen shirt.\n\nIt is eco-friendly.", $suggestion->getSuggestedText());
         self::assertSame('Old text', $suggestion->getOriginalText());
         self::assertSame('Old text', $this->translation($product, 'en_US')->getDescription());
         self::assertTrue($suggestion->isPending());
@@ -52,7 +53,7 @@ final class SuggestionGeneratorTest extends TestCase
         self::assertSame(20, $suggestion->getOutputTokens());
         self::assertSame('2026-10-11 10:00:00', $suggestion->getCreatedAt()->format('Y-m-d H:i:s'));
         self::assertSame($generator->requests[0]->prompt->hash(), $suggestion->getPromptHash());
-        self::assertSame('environmental_claim_removed', $suggestion->getWarnings()[0]['code']);
+        self::assertSame(['environmental_claim_flagged', 'environmental_claim_removed'], array_column($suggestion->getWarnings(), 'code'));
         self::assertSame([$suggestion], $this->persisted);
         self::assertSame(1, $this->flushes);
     }
@@ -118,7 +119,7 @@ final class SuggestionGeneratorTest extends TestCase
     {
         $this->expectExceptionObject(new SuggestionException('tmonier_ai_copilot.error.empty_result'));
 
-        $this->suggestionGenerator(new FakeTextGenerator('Eco-friendly!'))->generate($this->product(), ProductField::DESCRIPTION, 'en_US');
+        $this->suggestionGenerator(new FakeTextGenerator('Carbon neutral!'))->generate($this->product(), ProductField::DESCRIPTION, 'en_US');
     }
 
     public function testInvalidRequestsAreRefused(): void

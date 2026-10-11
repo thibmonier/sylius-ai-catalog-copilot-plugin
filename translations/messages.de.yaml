@@ -1,5 +1,6 @@
 tmonier_ai_copilot:
     ui:
+        claims_to_check: "Umweltaussagen vor dem Übernehmen prüfen (Richtlinie (EU) 2024/825): %claims%. Nur behalten, wenn sie belegt sind, sonst den Vorschlag ablehnen."
         ai_suggestions: "KI-Vorschläge"
         ai_suggestion: "KI-Vorschlag"
         field: "Feld"

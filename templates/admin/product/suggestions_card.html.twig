@@ -46,7 +46,8 @@
                                     <td class="text-nowrap">{{ suggestion.localeCode }}</td>
                                     <td class="text-nowrap">{% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/field_label.html.twig' %}</td>
                                     <td>
-                                        <div class="text-wrap">{{ suggestion.suggestedText|nl2br }}</div>
+                                        {% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/claims_alert.html.twig' with { suggestion } only %}
+                                        <div class="text-wrap">{{ tmonier_ai_copilot_highlight_claims(suggestion.suggestedText, suggestion.warnings) }}</div>
                                         {% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/warnings.html.twig' with { warnings: suggestion.warnings } only %}
                                     </td>
                                     <td class="text-nowrap">{% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/generator.html.twig' %}</td>

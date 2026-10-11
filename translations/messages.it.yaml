@@ -1,5 +1,6 @@
 tmonier_ai_copilot:
     ui:
+        claims_to_check: "Asserzioni ambientali da verificare prima di accettare (direttiva (UE) 2024/825): %claims%. Mantienile solo se comprovate, altrimenti rifiuta il suggerimento."
         ai_suggestions: "Suggerimenti IA"
         ai_suggestion: "Suggerimento IA"
         field: "Campo"

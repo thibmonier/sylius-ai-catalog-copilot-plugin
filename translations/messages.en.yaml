@@ -1,5 +1,6 @@
 tmonier_ai_copilot:
     ui:
+        claims_to_check: "Environmental claims to check before accepting (Directive (EU) 2024/825): %claims%. Keep them only if they are substantiated, or reject the suggestion."
         ai_suggestions: "AI suggestions"
         ai_suggestion: "AI suggestion"
         field: "Field"

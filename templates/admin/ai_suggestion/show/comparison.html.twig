@@ -8,6 +8,7 @@
         </div>
     </div>
     <div class="card-body">
+        {% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/claims_alert.html.twig' with { suggestion } only %}
         {% include '@TmonierSyliusAiCatalogCopilotPlugin/admin/shared/warnings.html.twig' with { warnings: suggestion.warnings } only %}
         <div class="row g-3 mt-0">
             <div class="col-12 col-md-6">
@@ -20,7 +21,7 @@
             </div>
             <div class="col-12 col-md-6">
                 <h4 class="text-secondary">{{ 'tmonier_ai_copilot.ui.suggested_text'|trans }}</h4>
-                <p {{ sylius_test_html_attribute('tmonier-ai-copilot-suggestion-text') }}>{{ suggestion.suggestedText|nl2br }}</p>
+                <p {{ sylius_test_html_attribute('tmonier-ai-copilot-suggestion-text') }}>{{ tmonier_ai_copilot_highlight_claims(suggestion.suggestedText, suggestion.warnings) }}</p>
                 <div class="text-secondary small">{{ 'tmonier_ai_copilot.ui.characters'|trans({'%count%': suggestion.suggestedText|length}) }}</div>
             </div>
         </div>

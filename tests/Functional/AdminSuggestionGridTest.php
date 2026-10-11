@@ -49,6 +49,36 @@ final class AdminSuggestionGridTest extends WebTestCase
         self::assertCount(0, $crawler->filter(sprintf('[data-test-tmonier-ai-copilot-accept="%d"]', $this->idOf($rejected))));
     }
 
+    public function testFlaggedClaimsAreHighlightedBeforeAccepting(): void
+    {
+        $product = $this->createProduct('AI_CLAIMS');
+        $suggestion = $this->generate($product, 'description');
+        /** @var \Tmonier\SyliusAiCatalogCopilotPlugin\Guard\ContentGuardInterface $guard */
+        $guard = self::getContainer()->get('tmonier_ai_copilot.guard');
+        /** @var \Tmonier\SyliusAiCatalogCopilotPlugin\Facts\ProductFactsExtractorInterface $extractor */
+        $extractor = self::getContainer()->get('tmonier_ai_copilot.facts_extractor');
+        $guarded = $guard->apply('description', 'A <b>linen</b> shirt. It is eco-friendly. Shipped carbon neutral.', $extractor->extract($product, 'en_US', 'en_US'));
+        // Default mode: generic claims flagged and kept, neutrality claims removed.
+        self::assertSame('A linen shirt. It is eco-friendly.', $guarded->text);
+        $suggestion->setSuggestedText($guarded->text);
+        $suggestion->setWarnings($guarded->warnings);
+        $this->entityManager()->flush();
+        $this->loginAdmin();
+
+        $crawler = $this->client->request('GET', sprintf('/admin/ai-suggestions/%d', $this->idOf($suggestion)));
+        self::assertStringContainsString('eco-friendly', $crawler->filter(sprintf('[data-test-tmonier-ai-copilot-claims-alert="%d"]', $this->idOf($suggestion)))->text());
+        self::assertSame('eco-friendly', $crawler->filter('[data-test-tmonier-ai-copilot-suggestion-text] mark[data-test-tmonier-ai-copilot-claim]')->text());
+        self::assertCount(1, $crawler->filter('[data-test-tmonier-ai-copilot-warning="environmental_claim_flagged"]'));
+        self::assertCount(1, $crawler->filter('[data-test-tmonier-ai-copilot-warning="environmental_claim_removed"]'));
+
+        $crawler = $this->client->request('GET', $this->productUrl($product));
+        self::assertCount(1, $crawler->filter(sprintf('[data-test-tmonier-ai-copilot-claims-alert="%d"]', $this->idOf($suggestion))));
+        self::assertCount(1, $crawler->filter(sprintf('[data-test-tmonier-ai-copilot-pending="%d"] mark[data-test-tmonier-ai-copilot-claim]', $this->idOf($suggestion))));
+
+        $crawler = $this->client->request('GET', '/admin/ai-suggestions/', ['criteria' => ['product' => ['type' => 'contains', 'value' => 'AI_CLAIMS']]]);
+        self::assertSame('eco-friendly', $crawler->filter(sprintf('[data-test-tmonier-ai-copilot-suggested-text="%d"] mark', $this->idOf($suggestion)))->text());
+    }
+
     public function testTheMenuLinksToTheGrid(): void
     {
         $this->loginAdmin();

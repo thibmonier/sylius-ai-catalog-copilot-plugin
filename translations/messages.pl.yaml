@@ -1,5 +1,6 @@
 tmonier_ai_copilot:
     ui:
+        claims_to_check: "Twierdzenia środowiskowe do sprawdzenia przed akceptacją (dyrektywa (UE) 2024/825): %claims%. Zachowaj je tylko, jeśli są uzasadnione, w przeciwnym razie odrzuć sugestię."
         ai_suggestions: "Sugestie AI"
         ai_suggestion: "Sugestia AI"
         field: "Pole"
