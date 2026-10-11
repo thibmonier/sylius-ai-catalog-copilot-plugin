@@ -6,6 +6,7 @@ namespace Tmonier\SyliusAiCatalogCopilotPlugin\Facts;
 
 use Sylius\Component\Attribute\Model\AttributeValueInterface;
 use Sylius\Component\Core\Model\ProductInterface;
+use Sylius\Component\Core\Model\ProductTranslationInterface;
 use Sylius\Component\Core\Model\TaxonInterface;
 use Sylius\Component\Product\Model\ProductOptionInterface;
 use Sylius\Component\Product\Model\ProductOptionValueInterface;
@@ -32,8 +33,9 @@ final class ProductFactsExtractor implements ProductFactsExtractorInterface
     {
         foreach ([$localeCode, $fallbackLocaleCode] as $locale) {
             $translation = $product->getTranslations()->get($locale);
-            if (null !== $translation && null !== $translation->getName() && '' !== trim($translation->getName())) {
-                return trim($translation->getName());
+            $name = $translation instanceof ProductTranslationInterface ? trim((string) $translation->getName()) : '';
+            if ('' !== $name) {
+                return $name;
             }
         }
 
@@ -120,7 +122,7 @@ final class ProductFactsExtractor implements ProductFactsExtractorInterface
 
         $labels = [];
         foreach ($keys as $key) {
-            if (!is_scalar($key)) {
+            if (!is_int($key) && !is_string($key)) {
                 continue;
             }
 

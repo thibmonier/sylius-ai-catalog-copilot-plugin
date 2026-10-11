@@ -49,7 +49,7 @@ final class ShopProvenanceNoticeTest extends WebTestCase
         self::assertCount(0, $crawler->filter('[data-test-tmonier-ai-copilot-shop-notice]'));
 
         $this->applier()->accept($this->generate($product, 'description'), null);
-        $product->getTranslations()->get('en_US')?->setDescription('Rewritten by a human');
+        $this->translation($product, 'en_US')->setDescription('Rewritten by a human');
         $this->entityManager()->flush();
 
         $crawler = $this->client->request('GET', '/en_US/products/ai_shop_human-en_us');

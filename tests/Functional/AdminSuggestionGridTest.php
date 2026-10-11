@@ -89,7 +89,7 @@ final class AdminSuggestionGridTest extends WebTestCase
         $accepted = $this->generate($first, 'description');
         $acceptedToo = $this->generate($first, 'meta_keywords');
         $stale = $this->generate($second, 'description');
-        $second->getTranslations()->get('en_US')?->setDescription('Rewritten by a human');
+        $this->translation($second, 'en_US')->setDescription('Rewritten by a human');
         $this->entityManager()->flush();
         $this->loginAdmin();
         $this->client->request('GET', '/admin/ai-suggestions/', ['criteria' => ['product' => ['type' => 'contains', 'value' => 'AI_BULK']]]);
@@ -108,7 +108,7 @@ final class AdminSuggestionGridTest extends WebTestCase
         self::assertSame(AiSuggestionInterface::STATUS_ACCEPTED, $this->reload($accepted)->getStatus());
         self::assertSame(AiSuggestionInterface::STATUS_ACCEPTED, $this->reload($acceptedToo)->getStatus());
         self::assertTrue($this->reload($stale)->isPending());
-        self::assertNotNull($this->reload($first)->getTranslations()->get('en_US')?->getMetaKeywords());
+        self::assertNotNull($this->translation($this->reload($first), 'en_US')->getMetaKeywords());
     }
 
     public function testBulkReject(): void

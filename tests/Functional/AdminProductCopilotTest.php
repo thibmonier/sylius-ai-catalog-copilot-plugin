@@ -6,6 +6,7 @@ namespace Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Functional;
 
 use Sylius\Component\Core\Model\ProductTranslationInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiProvenanceInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Event\AiSuggestionAccepted;
@@ -70,7 +71,7 @@ final class AdminProductCopilotTest extends WebTestCase
         self::assertStringContainsString('Material: Linen.', $suggestion->getSuggestedText());
         self::assertSame('sylius', $suggestion->getRequestedBy()?->getUsername());
         $product = $this->reload($product);
-        self::assertSame('Original description', $product->getTranslations()->get('en_US')?->getDescription());
+        self::assertSame('Original description', $this->translation($product, 'en_US')->getDescription());
 
         $crawler = $this->client->followRedirect();
         self::assertCount(1, $crawler->filter(sprintf('[data-test-tmonier-ai-copilot-pending="%d"]', $this->idOf($suggestion))));
@@ -117,7 +118,9 @@ final class AdminProductCopilotTest extends WebTestCase
         $product = $this->createProduct('AI_ACCEPT', ['description' => 'Original description']);
         $suggestion = $this->generate($product, 'description');
         $events = [];
-        self::getContainer()->get('event_dispatcher')->addListener(AiSuggestionAccepted::class, static function (AiSuggestionAccepted $event) use (&$events): void {
+        $dispatcher = self::getContainer()->get('event_dispatcher');
+        self::assertInstanceOf(EventDispatcherInterface::class, $dispatcher);
+        $dispatcher->addListener(AiSuggestionAccepted::class, static function (AiSuggestionAccepted $event) use (&$events): void {
             $events[] = $event;
         });
         $this->loginAdmin();
@@ -151,7 +154,7 @@ final class AdminProductCopilotTest extends WebTestCase
     {
         $product = $this->createProduct('AI_STALE', ['description' => 'Original description']);
         $suggestion = $this->generate($product, 'description');
-        $product->getTranslations()->get('en_US')?->setDescription('Rewritten by a human');
+        $this->translation($product, 'en_US')->setDescription('Rewritten by a human');
         $this->entityManager()->flush();
         $this->loginAdmin();
         $this->client->request('GET', $this->productUrl($product));
@@ -166,7 +169,7 @@ final class AdminProductCopilotTest extends WebTestCase
         $suggestion = $this->reload($suggestion);
         $product = $this->reload($product);
         self::assertTrue($suggestion->isPending());
-        self::assertSame('Rewritten by a human', $product->getTranslations()->get('en_US')?->getDescription());
+        self::assertSame('Rewritten by a human', $this->translation($product, 'en_US')->getDescription());
     }
 
     public function testRejecting(): void
@@ -186,7 +189,7 @@ final class AdminProductCopilotTest extends WebTestCase
         $suggestion = $this->reload($suggestion);
         $product = $this->reload($product);
         self::assertSame(AiSuggestionInterface::STATUS_REJECTED, $suggestion->getStatus());
-        self::assertSame('Original description', $product->getTranslations()->get('en_US')?->getDescription());
+        self::assertSame('Original description', $this->translation($product, 'en_US')->getDescription());
     }
 
     public function testActionsNeedAValidCsrfToken(): void

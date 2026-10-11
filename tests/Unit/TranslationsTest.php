@@ -43,8 +43,6 @@ final class TranslationsTest extends TestCase
         }
     }
 
-
-    /** @return array<mixed> */
     public function testEveryFieldStatusAndWarningHasALabel(): void
     {
         $messages = $this->flatten($this->parse('messages', 'en'));
@@ -67,6 +65,7 @@ final class TranslationsTest extends TestCase
         }
     }
 
+    /** @return array<mixed> */
     private function parse(string $domain, string $locale): array
     {
         $data = Yaml::parseFile(sprintf('%s/../../translations/%s.%s.yaml', __DIR__, $domain, $locale));

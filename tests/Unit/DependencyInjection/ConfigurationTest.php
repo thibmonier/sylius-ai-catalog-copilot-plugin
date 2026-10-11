@@ -49,11 +49,11 @@ final class ConfigurationTest extends TestCase
     /**
      * @param array<string, mixed> $config
      *
-     * @return array<string, mixed>
+     * @return array{generator: array{type: string, options: array<string, mixed>}, provenance: array{enabled: bool, shop_notice: bool}, environmental_claims: array{mode: string}, max_products_per_run: int, source_locale: ?string, limits: array<string, mixed>}
      */
     private function process(array $config): array
     {
-        /** @var array<string, mixed> $processed */
+        /** @var array{generator: array{type: string, options: array<string, mixed>}, provenance: array{enabled: bool, shop_notice: bool}, environmental_claims: array{mode: string}, max_products_per_run: int, source_locale: ?string, limits: array<string, mixed>} $processed */
         $processed = (new Processor())->processConfiguration(new Configuration(), [$config]);
 
         return $processed;

@@ -57,8 +57,10 @@ final class GenerateSuggestionsCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $field = (string) $input->getOption('field');
-        $localeCode = (string) $input->getOption('locale');
+        $field = $input->getOption('field');
+        $field = is_string($field) ? $field : '';
+        $localeCode = $input->getOption('locale');
+        $localeCode = is_string($localeCode) ? $localeCode : '';
         $sourceLocaleCode = $input->getOption('source-locale');
         $sourceLocaleCode = is_string($sourceLocaleCode) && '' !== $sourceLocaleCode ? $sourceLocaleCode : null;
         if (!ProductField::isValid($field) || '' === $localeCode) {

@@ -9,9 +9,6 @@ use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Sylius\Component\Core\Model\ProductInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
 
-/**
- * @extends EntityRepository<AiSuggestionInterface>
- */
 class AiSuggestionRepository extends EntityRepository implements AiSuggestionRepositoryInterface
 {
     public function createListQueryBuilder(): QueryBuilder

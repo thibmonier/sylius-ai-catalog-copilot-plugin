@@ -49,7 +49,7 @@ final class EnvironmentalClaimDetectorTest extends TestCase
     {
         $detector = new EnvironmentalClaimDetector();
 
-        self::assertSame([], $detector->findUnsubstantiated('An eco-friendly shirt.', "certification: eu ecolabel (fr/016/012)"));
+        self::assertSame([], $detector->findUnsubstantiated('An eco-friendly shirt.', 'certification: eu ecolabel (fr/016/012)'));
         self::assertCount(1, $detector->findUnsubstantiated('An eco-friendly shirt.', 'material: organic cotton'));
     }
 

@@ -15,7 +15,7 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Repository\AiProvenanceRepositoryInterf
  */
 final class ProvenanceProvider implements ProvenanceProviderInterface
 {
-    /** @var array<string, array<string, ProvenanceView>> */
+    /** @var array<int, array<string, ProvenanceView>> indexed by translation id */
     private array $cache = [];
 
     public function __construct(private readonly AiProvenanceRepositoryInterface $provenanceRepository)
@@ -30,11 +30,12 @@ final class ProvenanceProvider implements ProvenanceProviderInterface
     public function all(ProductInterface $product, ?string $localeCode = null): array
     {
         $translation = null === $localeCode ? $product->getTranslation() : $product->getTranslations()->get($localeCode);
-        if (!$translation instanceof ProductTranslationInterface || null === $translation->getId()) {
+        $id = $translation instanceof ProductTranslationInterface ? $translation->getId() : null;
+        if (!$translation instanceof ProductTranslationInterface || !is_int($id)) {
             return [];
         }
 
-        $key = (string) $translation->getId();
+        $key = $id;
         if (isset($this->cache[$key])) {
             return $this->cache[$key];
         }
@@ -47,7 +48,7 @@ final class ProvenanceProvider implements ProvenanceProviderInterface
 
             $views[$field] = new ProvenanceView(
                 $field,
-                (string) $translation->getLocale(),
+                $translation->getLocale() ?? '',
                 $provenance->matches(ProductField::getValue($translation, $field)) ? ProvenanceView::STATUS_GENERATED : ProvenanceView::STATUS_EDITED,
                 $provenance->getGenerator(),
                 $provenance->getModel(),

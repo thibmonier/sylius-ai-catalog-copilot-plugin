@@ -27,8 +27,8 @@ final class ProductFactsExtractorTest extends WebTestCase
     public function testItReadsTheCatalogDataOfTheLocale(): void
     {
         $product = $this->createProduct('AI_FACTS', [], 'Organic linen');
-        /** @var TaxonInterface $taxon */
-        $taxon = self::getContainer()->get('sylius.factory.taxon')->createNew();
+        $taxon = $this->factory('sylius.factory.taxon')->createNew();
+        self::assertInstanceOf(TaxonInterface::class, $taxon);
         $taxon->setCode('AI_FACTS_TAXON');
         $taxon->setCurrentLocale('fr_FR');
         $taxon->setName('Chemises');
@@ -47,6 +47,6 @@ final class ProductFactsExtractorTest extends WebTestCase
         self::assertSame(['Chemises'], $facts->taxons);
         // Attribute names fall back to the default locale.
         self::assertSame([['name' => 'Material', 'value' => 'Organic linen']], $facts->attributes);
-        self::assertSame("material: organic linen", $facts->attributesText());
+        self::assertSame('material: organic linen', $facts->attributesText());
     }
 }

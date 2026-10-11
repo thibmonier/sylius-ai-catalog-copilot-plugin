@@ -6,14 +6,17 @@ namespace Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Functional;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Sylius\Component\Attribute\Factory\AttributeFactoryInterface;
 use Sylius\Component\Core\Model\AdminUserInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\ChannelPricingInterface;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductTranslationInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
+use Sylius\Component\Product\Factory\ProductFactoryInterface;
 use Sylius\Component\Product\Model\ProductAttributeInterface;
 use Sylius\Component\Product\Model\ProductAttributeValueInterface;
+use Sylius\Resource\Factory\FactoryInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Suggestion\SuggestionGeneratorInterface;
@@ -58,9 +61,10 @@ trait CopilotTestTrait
     private function createProduct(string $code, array $enUs = [], string $material = 'Linen'): ProductInterface
     {
         $container = self::getContainer();
-        /** @var \Sylius\Component\Product\Factory\ProductFactoryInterface<ProductInterface> $productFactory */
         $productFactory = $container->get('sylius.factory.product');
+        self::assertInstanceOf(ProductFactoryInterface::class, $productFactory);
         $product = $productFactory->createWithVariant();
+        self::assertInstanceOf(ProductInterface::class, $product);
         $product->setCode($code);
         $product->setCurrentLocale('en_US');
         $product->setFallbackLocale('en_US');
@@ -68,7 +72,7 @@ trait CopilotTestTrait
 
         foreach (['en_US' => 'Linen shirt ' . $code, 'fr_FR' => 'Chemise en lin ' . $code] as $locale => $name) {
             /** @var ProductTranslationInterface $translation */
-            $translation = $container->get('sylius.factory.product_translation')->createNew();
+            $translation = $this->factory('sylius.factory.product_translation')->createNew();
             $translation->setLocale($locale);
             $translation->setName($name);
             $translation->setSlug(strtolower($code) . '-' . strtolower($locale));
@@ -87,20 +91,22 @@ trait CopilotTestTrait
         $variant->setCurrentLocale('en_US');
         $variant->setName($code);
         /** @var ChannelPricingInterface $pricing */
-        $pricing = $container->get('sylius.factory.channel_pricing')->createNew();
+        $pricing = $this->factory('sylius.factory.channel_pricing')->createNew();
         $pricing->setChannelCode((string) $channel->getCode());
         $pricing->setPrice(2500);
         $variant->addChannelPricing($pricing);
 
-        /** @var ProductAttributeInterface $attribute */
-        $attribute = $container->get('sylius.factory.product_attribute')->createTyped('text');
+        $attributeFactory = $container->get('sylius.factory.product_attribute');
+        self::assertInstanceOf(AttributeFactoryInterface::class, $attributeFactory);
+        $attribute = $attributeFactory->createTyped('text');
+        self::assertInstanceOf(ProductAttributeInterface::class, $attribute);
         $attribute->setCode('material_' . strtolower($code));
         $attribute->setCurrentLocale('en_US');
         $attribute->setFallbackLocale('en_US');
         $attribute->setName('Material');
         $attribute->setTranslatable(false);
         /** @var ProductAttributeValueInterface $value */
-        $value = $container->get('sylius.factory.product_attribute_value')->createNew();
+        $value = $this->factory('sylius.factory.product_attribute_value')->createNew();
         $value->setAttribute($attribute);
         $value->setValue($material);
         $product->addAttribute($value);
@@ -110,6 +116,23 @@ trait CopilotTestTrait
         $this->entityManager()->flush();
 
         return $product;
+    }
+
+    private function translation(ProductInterface $product, string $locale): ProductTranslationInterface
+    {
+        $translation = $product->getTranslations()->get($locale);
+        self::assertInstanceOf(ProductTranslationInterface::class, $translation);
+
+        return $translation;
+    }
+
+    /** @return FactoryInterface<object> */
+    private function factory(string $id): FactoryInterface
+    {
+        $factory = self::getContainer()->get($id);
+        self::assertInstanceOf(FactoryInterface::class, $factory);
+
+        return $factory;
     }
 
     private function channel(): ChannelInterface

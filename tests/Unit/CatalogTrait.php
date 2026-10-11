@@ -7,6 +7,7 @@ namespace Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Unit;
 use Sylius\Component\Core\Model\Product;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductTranslation;
+use Sylius\Component\Core\Model\ProductTranslationInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Guard\FieldLimits;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Prompt\TwigPromptBuilder;
 use Twig\Environment;
@@ -31,6 +32,14 @@ trait CatalogTrait
         }
 
         return $product;
+    }
+
+    private function translation(ProductInterface $product, string $locale): ProductTranslationInterface
+    {
+        $translation = $product->getTranslations()->get($locale);
+        self::assertInstanceOf(ProductTranslationInterface::class, $translation);
+
+        return $translation;
     }
 
     private function promptBuilder(): TwigPromptBuilder

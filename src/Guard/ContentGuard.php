@@ -112,8 +112,8 @@ final class ContentGuard implements ContentGuardInterface
     private function trimQuotes(string $text): string
     {
         foreach (['"' => '"', '“' => '”', '«' => '»', '\'' => '\''] as $open => $close) {
-            if (mb_strlen($text) > 2 && str_starts_with($text, $open) && str_ends_with($text, $close)
-                && !str_contains(mb_substr($text, 1, -1), $open)) {
+            if (mb_strlen($text) > 2 && str_starts_with($text, $open) && str_ends_with($text, $close) &&
+                !str_contains(mb_substr($text, 1, -1), $open)) {
                 return trim(mb_substr($text, 1, -1));
             }
         }

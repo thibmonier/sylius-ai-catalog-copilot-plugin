@@ -20,6 +20,7 @@ final class TmonierSyliusAiCatalogCopilotExtension extends AbstractResourceExten
 
     public function load(array $configs, ContainerBuilder $container): void
     {
+        /** @var array{generator: array{type: string, platform: ?string, model: ?string, options: array<string, mixed>, service: ?string}, source_locale: ?string, max_products_per_run: int, environmental_claims: array{mode: string, recognised_labels: array<string>}, limits: array<string, array{min?: int, max?: int}>, provenance: array{enabled: bool, shop_notice: bool}, driver: string, resources: array<string, mixed>} $config */
         $config = $this->processConfiguration(new Configuration(), $configs);
 
         $this->registerResources('tmonier_ai_copilot', $config['driver'], $config['resources'], $container);
@@ -40,6 +41,7 @@ final class TmonierSyliusAiCatalogCopilotExtension extends AbstractResourceExten
 
     public function prepend(ContainerBuilder $container): void
     {
+        /** @var array{provenance: array{enabled: bool, shop_notice: bool}, resources: array<string, array{classes: array{model: string}}>} $config */
         $config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()));
         foreach ($config['resources'] as $name => $resource) {
             $container->setParameter(sprintf('tmonier_ai_copilot.model.%s.class', $name), $resource['classes']['model']);

@@ -39,7 +39,7 @@ final class GenerateSuggestionsCommandTest extends WebTestCase
         self::assertStringContainsString('1 suggestion(s) generated, 0 failure(s).', $tester->getDisplay());
         self::assertCount(1, $this->suggestionsOf($empty));
         self::assertCount(0, $this->suggestionsOf($filled));
-        self::assertNull($this->reload($empty)->getTranslations()->get('en_US')?->getDescription());
+        self::assertNull($this->translation($this->reload($empty), 'en_US')->getDescription());
 
         // A second run skips products that already have a pending suggestion.
         $tester->execute(['--field' => 'description', '--locale' => 'en_US', '--product' => ['AI_CMD_EMPTY', 'AI_CMD_FILLED']]);

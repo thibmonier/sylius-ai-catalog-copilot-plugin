@@ -8,7 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Sylius\Component\Core\Model\AdminUser;
 use Sylius\Component\Core\Model\ProductInterface;
-use Sylius\Resource\Factory\Factory;
+use Sylius\Resource\Factory\FactoryInterface;
 use Symfony\Component\Clock\MockClock;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Unit\CatalogTrait;
@@ -44,7 +44,7 @@ final class SuggestionApplierTest extends TestCase
 
         $this->applier()->accept($suggestion, $admin);
 
-        self::assertSame('New text', $product->getTranslations()->get('en_US')?->getDescription());
+        self::assertSame('New text', $this->translation($product, 'en_US')->getDescription());
         self::assertSame(AiSuggestionInterface::STATUS_ACCEPTED, $suggestion->getStatus());
         self::assertSame($admin, $suggestion->getDecidedBy());
         self::assertSame('2026-10-11 12:00:00', $suggestion->getDecidedAt()?->format('Y-m-d H:i:s'));
@@ -94,7 +94,7 @@ final class SuggestionApplierTest extends TestCase
             self::assertSame('tmonier_ai_copilot.error.stale', $exception->getMessage());
         }
 
-        self::assertSame('Edited by a human', $product->getTranslations()->get('en_US')?->getDescription());
+        self::assertSame('Edited by a human', $this->translation($product, 'en_US')->getDescription());
         self::assertTrue($suggestion->isPending());
         self::assertSame(0, $this->flushes);
         self::assertSame([], $this->events);
@@ -106,7 +106,7 @@ final class SuggestionApplierTest extends TestCase
 
         $this->applier()->accept($this->suggestion($product, "Line 1\nLine 2", 'New text'), null);
 
-        self::assertSame('New text', $product->getTranslations()->get('en_US')?->getDescription());
+        self::assertSame('New text', $this->translation($product, 'en_US')->getDescription());
     }
 
     public function testAMissingTranslationIsRefused(): void
@@ -127,7 +127,7 @@ final class SuggestionApplierTest extends TestCase
         $this->applier()->reject($suggestion, null);
 
         self::assertSame(AiSuggestionInterface::STATUS_REJECTED, $suggestion->getStatus());
-        self::assertSame('Old text', $product->getTranslations()->get('en_US')?->getDescription());
+        self::assertSame('Old text', $this->translation($product, 'en_US')->getDescription());
         self::assertSame(1, $this->flushes);
         self::assertSame([], $this->events);
     }
@@ -174,6 +174,9 @@ final class SuggestionApplierTest extends TestCase
             $this->events[] = $event;
         });
 
-        return new SuggestionApplier($repository, new Factory(AiProvenance::class), $entityManager, $dispatcher, new MockClock('2026-10-11 12:00:00'), $recordProvenance);
+        $factory = $this->createMock(FactoryInterface::class);
+        $factory->method('createNew')->willReturnCallback(static fn (): AiProvenance => new AiProvenance());
+
+        return new SuggestionApplier($repository, $factory, $entityManager, $dispatcher, new MockClock('2026-10-11 12:00:00'), $recordProvenance);
     }
 }

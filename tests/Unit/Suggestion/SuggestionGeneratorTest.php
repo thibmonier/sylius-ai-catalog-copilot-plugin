@@ -7,7 +7,7 @@ namespace Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Unit\Suggestion;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
-use Sylius\Resource\Factory\Factory;
+use Sylius\Resource\Factory\FactoryInterface;
 use Symfony\Component\Clock\MockClock;
 use Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Unit\CatalogTrait;
 use Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Unit\FakeTextGenerator;
@@ -43,7 +43,7 @@ final class SuggestionGeneratorTest extends TestCase
 
         self::assertSame('A linen shirt.', $suggestion->getSuggestedText());
         self::assertSame('Old text', $suggestion->getOriginalText());
-        self::assertSame('Old text', $product->getTranslations()->get('en_US')?->getDescription());
+        self::assertSame('Old text', $this->translation($product, 'en_US')->getDescription());
         self::assertTrue($suggestion->isPending());
         self::assertSame($product, $suggestion->getProduct());
         self::assertSame('platform', $suggestion->getGenerator());
@@ -150,12 +150,15 @@ final class SuggestionGeneratorTest extends TestCase
             ++$this->flushes;
         });
 
+        $factory = $this->createMock(FactoryInterface::class);
+        $factory->method('createNew')->willReturnCallback(static fn (): AiSuggestion => new AiSuggestion());
+
         return new SuggestionGenerator(
             new ProductFactsExtractor(),
             $this->promptBuilder(),
             $textGenerator,
             new ContentGuard(new EnvironmentalClaimDetector(), new FieldLimits()),
-            new Factory(AiSuggestion::class),
+            $factory,
             $repository,
             $entityManager,
             new MockClock('2026-10-11 10:00:00'),

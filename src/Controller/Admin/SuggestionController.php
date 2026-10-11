@@ -99,7 +99,8 @@ final class SuggestionController extends AbstractController
         $this->assertCsrfToken($request, self::DECIDE_CSRF_TOKEN_ID);
 
         $ids = [];
-        foreach ($request->request->all()['ids'] ?? [] as $value) {
+        $values = $request->request->all()['ids'] ?? [];
+        foreach (is_array($values) ? $values : [] as $value) {
             if (is_scalar($value) && ctype_digit((string) $value)) {
                 $ids[] = (int) $value;
             }

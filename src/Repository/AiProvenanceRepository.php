@@ -8,9 +8,6 @@ use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Sylius\Component\Core\Model\ProductTranslationInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiProvenanceInterface;
 
-/**
- * @extends EntityRepository<AiProvenanceInterface>
- */
 class AiProvenanceRepository extends EntityRepository implements AiProvenanceRepositoryInterface
 {
     public function findOneByTranslationAndField(ProductTranslationInterface $translation, string $field): ?AiProvenanceInterface
@@ -30,8 +27,10 @@ class AiProvenanceRepository extends EntityRepository implements AiProvenanceRep
             return [];
         }
 
+        /** @var list<AiProvenanceInterface> $found */
+        $found = $this->findBy(['translation' => $translation]);
         $provenances = [];
-        foreach ($this->findBy(['translation' => $translation]) as $provenance) {
+        foreach ($found as $provenance) {
             $provenances[$provenance->getField()] = $provenance;
         }
 
