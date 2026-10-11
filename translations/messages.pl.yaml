@@ -1,5 +1,6 @@
 tmonier_ai_copilot:
     ui:
+        demo_translation: "Demo: odtworzone z danych produktu, to nie jest prawdziwe tłumaczenie."
         claims_to_check: "Twierdzenia środowiskowe do sprawdzenia przed akceptacją (dyrektywa (UE) 2024/825): %claims%. Zachowaj je tylko, jeśli są uzasadnione, w przeciwnym razie odrzuć sugestię."
         ai_suggestions: "Sugestie AI"
         ai_suggestion: "Sugestia AI"
@@ -11,7 +12,7 @@ tmonier_ai_copilot:
         accept_selected: "Akceptuj zaznaczone"
         reject_selected: "Odrzuć zaznaczone"
         demo_generator: "Generator demonstracyjny"
-        demo_generator_help: "Sugestie są składane z atrybutów produktu, żadna usługa AI nie jest wywoływana. Skonfiguruj platformę Symfony AI, aby otrzymywać prawdziwe sugestie."
+        demo_generator_help: "Sugestie są składane z atrybutów produktu ze stałych zdań w wybranym języku, żadna usługa AI nie jest wywoływana (tłumaczenia są odtwarzane z danych produktu). Skonfiguruj platformę Symfony AI, aby otrzymywać prawdziwe teksty i tłumaczenia."
         translated_from: "Przetłumaczono z %locale%"
         tokens: "Tokeny (wejście / wyjście)"
         prompt_hash: "Skrót promptu"

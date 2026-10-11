@@ -80,9 +80,12 @@ modified.
    `@TmonierAiCopilot` namespace is in practice the bundle namespace
    `@TmonierSyliusAiCatalogCopilotPlugin`).
 3. `TextGeneratorInterface`: `PlatformTextGenerator` (Symfony AI platform service + model +
-   options), `DemoTextGenerator` (deterministic, no call, English text assembled from the facts,
-   `[locale] source` for translations, one product out of three gets "eco-friendly" (flagged) and "carbon neutral" (removed) to
-   demonstrate the guard), or an application service. Platform errors become
+   options), `DemoTextGenerator` (deterministic, no call; sentences assembled from the facts of
+   the target locale with templates in en/fr/de/es/it/nl/pl, English for other languages;
+   "Translate from" requests are rebuilt from the target-locale facts, never a prefixed copy of
+   the source, and labelled "demo: rebuilt from the product facts, not a real translation";
+   one product out of three gets a generic claim (flagged) and a carbon neutral claim (removed),
+   in the target language, to demonstrate the guard), or an application service. Platform errors become
    `GenerationFailedException`, logged on the `tmonier_ai_copilot` channel and shown as a generic
    flash.
 4. `ContentGuard`:

@@ -1,5 +1,6 @@
 tmonier_ai_copilot:
     ui:
+        demo_translation: "Demo: rebuilt from the product facts, not a real translation."
         claims_to_check: "Environmental claims to check before accepting (Directive (EU) 2024/825): %claims%. Keep them only if they are substantiated, or reject the suggestion."
         ai_suggestions: "AI suggestions"
         ai_suggestion: "AI suggestion"
@@ -11,7 +12,7 @@ tmonier_ai_copilot:
         accept_selected: "Accept selected"
         reject_selected: "Reject selected"
         demo_generator: "Demo generator"
-        demo_generator_help: "Suggestions are assembled from the product attributes, no AI service is called. Configure a Symfony AI platform to get real suggestions."
+        demo_generator_help: "Suggestions are assembled from the product attributes with fixed sentences in the language of the locale, no AI service is called (translations are rebuilt from the product data). Configure a Symfony AI platform to get real wording and translations."
         translated_from: "Translated from %locale%"
         tokens: "Tokens (input / output)"
         prompt_hash: "Prompt hash"

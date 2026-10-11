@@ -28,7 +28,7 @@ Nothing is written on a product until an administrator accepts it.
 | Clean output | Plain text only (HTML through Symfony HtmlSanitizer: the text of any element is kept, tables and lists become lines, scripts, styles and embeds are dropped, Markdown fences removed), length limits (meta description 50-160 characters, truncated on a word boundary), warnings shown on the suggestion. |
 | Know what was AI-written | **Provenance markers**: model and dates stored for each field written from a suggestion, a badge in the admin, an optional shop notice and `data-ai-*` attributes. Texts of the demo generator are never presented as AI-generated. |
 | Bulk generation | `tmonier:ai-copilot:generate --field=description --locale=en_US --only-empty` creates pending suggestions for many products (capped per run, with a cursor to continue). |
-| Try it without an API key | The default **demo generator** assembles texts from the attributes without any AI call, clearly labelled in the admin. |
+| Try it without an API key | The default **demo generator** assembles texts from the product facts with fixed sentences in the language of the locale (en, fr, de, es, it, nl, pl; English otherwise), without any AI call; "Translate from" rebuilds the text from the product data instead of translating. Its suggestions are clearly labelled in the admin. |
 | Integrate | `AiSuggestionAccepted` event after each accepted suggestion. |
 
 Also included: translations in English, French, German, Spanish, Italian, Dutch and Polish;
@@ -90,7 +90,7 @@ that pins another Symfony AI minor.
     bin/console doctrine:migrations:migrate
     ```
 
-The plugin now works with the **demo generator**. Plug a real model as below.
+The plugin now works with the **demo generator**: its fixed sentences only show the workflow. Real wording, and real translations of your texts, need a real model: plug one as below.
 
 ## Plugging a model
 

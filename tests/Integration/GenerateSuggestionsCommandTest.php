@@ -72,7 +72,8 @@ final class GenerateSuggestionsCommandTest extends WebTestCase
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
         $suggestions = $this->suggestionsOf($withSource);
         self::assertCount(1, $suggestions);
-        self::assertSame('[fr_FR] A linen shirt.', $suggestions[0]->getSuggestedText());
+        self::assertSame('en_US', $suggestions[0]->getSourceLocaleCode());
+        self::assertStringStartsWith('Découvrez Chemise en lin AI_CMD_SRC.', $suggestions[0]->getSuggestedText());
         self::assertCount(0, $this->suggestionsOf($withoutSource));
     }
 

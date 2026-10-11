@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Functional;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Sylius\Component\Core\Model\ProductTranslationInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -94,7 +95,59 @@ final class AdminProductCopilotTest extends WebTestCase
         self::assertInstanceOf(AiSuggestionInterface::class, $suggestion);
         self::assertSame('fr_FR', $suggestion->getLocaleCode());
         self::assertSame('en_US', $suggestion->getSourceLocaleCode());
-        self::assertSame('[fr_FR] A light linen shirt for warm summer days, cut in Europe.', $suggestion->getSuggestedText());
+        // Demo generator: rebuilt in French from the product facts, never a prefixed copy of the source.
+        self::assertStringStartsWith('Chemise en lin AI_TRANSLATE.', $suggestion->getSuggestedText());
+        self::assertStringEndsWith("Commandez en ligne dès aujourd'hui.", $suggestion->getSuggestedText());
+        self::assertStringNotContainsString('[fr_FR]', $suggestion->getSuggestedText());
+
+        $crawler = $this->client->followRedirect();
+        self::assertCount(1, $crawler->filter(sprintf('[data-test-tmonier-ai-copilot-pending="%d"] [data-test-tmonier-ai-copilot-demo-badge]', $this->idOf($suggestion))));
+        self::assertCount(1, $crawler->filter(sprintf('[data-test-tmonier-ai-copilot-pending="%d"] [data-test-tmonier-ai-copilot-demo-translation]', $this->idOf($suggestion))));
+    }
+
+    /** @return iterable<string, array{string, string, non-empty-string}> locale, product name, expected start */
+    public static function targetLocales(): iterable
+    {
+        yield 'fr_FR' => ['fr_FR', 'Chemise en lin AI_LOCALE', 'Découvrez Chemise en lin AI_LOCALE.'];
+        yield 'de_DE' => ['de_DE', 'Leinenhemd AI_LOCALE', 'Entdecken Sie Leinenhemd AI_LOCALE.'];
+    }
+
+    /** @param non-empty-string $start */
+    #[DataProvider('targetLocales')]
+    public function testTheDemoTextIsWrittenInTheLocaleOfTheTranslationTab(string $locale, string $name, string $start): void
+    {
+        $product = $this->createProduct('AI_LOCALE');
+        if (null === $product->getTranslations()->get($locale)) {
+            $translation = $this->factory('sylius.factory.product_translation')->createNew();
+            self::assertInstanceOf(ProductTranslationInterface::class, $translation);
+            $translation->setLocale($locale);
+            $translation->setName($name);
+            $translation->setSlug('ai-locale-' . strtolower($locale));
+            $product->addTranslation($translation);
+            $this->entityManager()->flush();
+        }
+        $this->loginAdmin();
+        $crawler = $this->client->request('GET', $this->productUrl($product));
+        self::assertCount(1, $crawler->filter(sprintf('[data-test-tmonier-ai-copilot-generate="description|%s"]', $locale)));
+
+        foreach (['description', 'meta_description'] as $field) {
+            $this->client->request('POST', sprintf('/admin/products/%d/ai-suggestions/generate', $this->idOf($product)), [
+                '_csrf_token' => $this->tokenOnPage('form#tmonier-ai-copilot-generate'),
+                'target' => $field . '|' . $locale,
+            ]);
+            $crawler = $this->client->followRedirect();
+        }
+
+        $suggestions = $this->entityManager()->getRepository(AiSuggestionInterface::class)->findBy(['product' => $this->idOf($product)], ['id' => 'ASC']);
+        self::assertCount(2, $suggestions);
+        self::assertSame($locale, $suggestions[0]->getLocaleCode());
+        self::assertStringStartsWith($start, $suggestions[0]->getSuggestedText());
+        foreach ($suggestions as $suggestion) {
+            foreach (['is part of', 'Discover', 'Available', 'Order online', 'range', '[' . $locale . ']'] as $englishOrPrefix) {
+                self::assertStringNotContainsString($englishOrPrefix, $suggestion->getSuggestedText());
+            }
+        }
+        self::assertCount(2, $crawler->filter('[data-test-tmonier-ai-copilot-pending] [data-test-tmonier-ai-copilot-demo-badge]'));
     }
 
     public function testAGenerationErrorIsShownAsAFlash(): void

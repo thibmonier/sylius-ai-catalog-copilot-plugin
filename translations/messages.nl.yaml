@@ -1,5 +1,6 @@
 tmonier_ai_copilot:
     ui:
+        demo_translation: "Demo: opnieuw opgebouwd uit de productgegevens, geen echte vertaling."
         claims_to_check: "Milieuclaims om te controleren vóór het accepteren (Richtlijn (EU) 2024/825): %claims%. Behoud ze alleen als ze onderbouwd zijn, of wijs de suggestie af."
         ai_suggestions: "AI-suggesties"
         ai_suggestion: "AI-suggestie"
@@ -11,7 +12,7 @@ tmonier_ai_copilot:
         accept_selected: "Selectie accepteren"
         reject_selected: "Selectie afwijzen"
         demo_generator: "Demogenerator"
-        demo_generator_help: "De suggesties worden samengesteld uit de productattributen, er wordt geen AI-dienst aangeroepen. Configureer een Symfony AI-platform voor echte suggesties."
+        demo_generator_help: "De suggesties worden samengesteld uit de productattributen met vaste zinnen in de gekozen taal, er wordt geen AI-dienst aangeroepen (vertalingen worden opnieuw opgebouwd uit de productgegevens). Configureer een Symfony AI-platform voor echte teksten en vertalingen."
         translated_from: "Vertaald uit %locale%"
         tokens: "Tokens (invoer / uitvoer)"
         prompt_hash: "Prompt-hash"
