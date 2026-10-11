@@ -1,0 +1,18 @@
+tmonier_ai_copilot:
+    suggestion_generated: "Suggestion generated: review it below, nothing changed on the product yet."
+    suggestion_accepted: "Suggestion accepted and saved on the product."
+    suggestion_rejected: "Suggestion rejected."
+    bulk_nothing_selected: "Select at least one suggestion."
+    bulk_too_many: "Select at most %max% suggestions at once."
+    bulk_accepted: "%count% suggestion(s) accepted."
+    bulk_rejected: "%count% suggestion(s) rejected."
+    bulk_skipped: "%count% suggestion(s) skipped: already decided, or the product changed since the generation."
+    error:
+        unknown_field: "Unknown field \"%field%\"."
+        same_locale: "The source and target locales must differ."
+        empty_source: "Nothing to translate: the field is empty in %locale%."
+        generation_failed: "The AI service failed to generate the text. Try again later; details are in the logs."
+        empty_result: "The generated text was empty after the content checks."
+        missing_translation: "The product has no %locale% translation: save it in this locale first."
+        stale: "The field changed since the suggestion was generated: generate a new one."
+        already_decided: "This suggestion was already accepted or rejected."

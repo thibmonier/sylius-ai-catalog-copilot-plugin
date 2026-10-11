@@ -1,0 +1,18 @@
+tmonier_ai_copilot:
+    suggestion_generated: "Suggestie gegenereerd: bekijk deze hieronder, het product is nog niet gewijzigd."
+    suggestion_accepted: "Suggestie geaccepteerd en opgeslagen op het product."
+    suggestion_rejected: "Suggestie afgewezen."
+    bulk_nothing_selected: "Selecteer ten minste één suggestie."
+    bulk_too_many: "Selecteer maximaal %max% suggesties tegelijk."
+    bulk_accepted: "%count% suggestie(s) geaccepteerd."
+    bulk_rejected: "%count% suggestie(s) afgewezen."
+    bulk_skipped: "%count% suggestie(s) overgeslagen: al beslist, of het product is sinds de generatie gewijzigd."
+    error:
+        unknown_field: "Onbekend veld „%field%”."
+        same_locale: "De bron- en doeltaal moeten verschillen."
+        empty_source: "Niets te vertalen: het veld is leeg in %locale%."
+        generation_failed: "De AI-dienst kon de tekst niet genereren. Probeer het later opnieuw; details staan in de logs."
+        empty_result: "De gegenereerde tekst was leeg na de inhoudscontroles."
+        missing_translation: "Het product heeft geen vertaling %locale%: sla het eerst op in deze taal."
+        stale: "Het veld is gewijzigd sinds de suggestie is gegenereerd: genereer een nieuwe."
+        already_decided: "Deze suggestie is al geaccepteerd of afgewezen."

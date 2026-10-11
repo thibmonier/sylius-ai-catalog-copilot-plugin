@@ -1,0 +1,18 @@
+tmonier_ai_copilot:
+    suggestion_generated: "Vorschlag generiert: prüfen Sie ihn unten, am Produkt wurde noch nichts geändert."
+    suggestion_accepted: "Vorschlag übernommen und am Produkt gespeichert."
+    suggestion_rejected: "Vorschlag abgelehnt."
+    bulk_nothing_selected: "Wählen Sie mindestens einen Vorschlag aus."
+    bulk_too_many: "Wählen Sie höchstens %max% Vorschläge auf einmal aus."
+    bulk_accepted: "%count% Vorschlag/Vorschläge übernommen."
+    bulk_rejected: "%count% Vorschlag/Vorschläge abgelehnt."
+    bulk_skipped: "%count% Vorschlag/Vorschläge übersprungen: bereits entschieden oder das Produkt wurde seit der Generierung geändert."
+    error:
+        unknown_field: "Unbekanntes Feld „%field%“."
+        same_locale: "Quell- und Zielsprache müssen sich unterscheiden."
+        empty_source: "Nichts zu übersetzen: das Feld ist in %locale% leer."
+        generation_failed: "Der KI-Dienst konnte den Text nicht generieren. Versuchen Sie es später erneut; Details stehen in den Logs."
+        empty_result: "Der generierte Text war nach den Inhaltsprüfungen leer."
+        missing_translation: "Das Produkt hat keine Übersetzung %locale%: speichern Sie es zuerst in dieser Sprache."
+        stale: "Das Feld wurde seit der Generierung geändert: generieren Sie einen neuen Vorschlag."
+        already_decided: "Dieser Vorschlag wurde bereits übernommen oder abgelehnt."

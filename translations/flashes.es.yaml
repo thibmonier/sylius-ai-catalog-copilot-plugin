@@ -1,0 +1,18 @@
+tmonier_ai_copilot:
+    suggestion_generated: "Sugerencia generada: revísela abajo, el producto aún no ha cambiado."
+    suggestion_accepted: "Sugerencia aceptada y guardada en el producto."
+    suggestion_rejected: "Sugerencia rechazada."
+    bulk_nothing_selected: "Seleccione al menos una sugerencia."
+    bulk_too_many: "Seleccione como máximo %max% sugerencias a la vez."
+    bulk_accepted: "%count% sugerencia(s) aceptada(s)."
+    bulk_rejected: "%count% sugerencia(s) rechazada(s)."
+    bulk_skipped: "%count% sugerencia(s) omitida(s): ya decidida(s) o el producto cambió desde la generación."
+    error:
+        unknown_field: "Campo desconocido «%field%»."
+        same_locale: "Los idiomas de origen y destino deben ser distintos."
+        empty_source: "Nada que traducir: el campo está vacío en %locale%."
+        generation_failed: "El servicio de IA no pudo generar el texto. Inténtelo más tarde; los detalles están en los registros."
+        empty_result: "El texto generado quedó vacío tras los controles de contenido."
+        missing_translation: "El producto no tiene traducción %locale%: guárdelo primero en este idioma."
+        stale: "El campo cambió desde que se generó la sugerencia: genere una nueva."
+        already_decided: "Esta sugerencia ya fue aceptada o rechazada."

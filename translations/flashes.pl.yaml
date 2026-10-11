@@ -1,0 +1,18 @@
+tmonier_ai_copilot:
+    suggestion_generated: "Sugestia wygenerowana: sprawdź ją poniżej, produkt nie został jeszcze zmieniony."
+    suggestion_accepted: "Sugestia zaakceptowana i zapisana w produkcie."
+    suggestion_rejected: "Sugestia odrzucona."
+    bulk_nothing_selected: "Zaznacz co najmniej jedną sugestię."
+    bulk_too_many: "Zaznacz naraz najwyżej %max% sugestii."
+    bulk_accepted: "Zaakceptowano sugestie: %count%."
+    bulk_rejected: "Odrzucono sugestie: %count%."
+    bulk_skipped: "Pominięto sugestie: %count% (już rozpatrzone lub produkt zmienił się od generowania)."
+    error:
+        unknown_field: "Nieznane pole „%field%”."
+        same_locale: "Język źródłowy i docelowy muszą być różne."
+        empty_source: "Nie ma czego tłumaczyć: pole jest puste w %locale%."
+        generation_failed: "Usługa AI nie wygenerowała tekstu. Spróbuj później; szczegóły są w logach."
+        empty_result: "Wygenerowany tekst był pusty po kontroli treści."
+        missing_translation: "Produkt nie ma tłumaczenia %locale%: najpierw zapisz go w tym języku."
+        stale: "Pole zmieniło się od wygenerowania sugestii: wygeneruj nową."
+        already_decided: "Ta sugestia została już zaakceptowana lub odrzucona."
