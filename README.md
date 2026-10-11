@@ -24,10 +24,10 @@ Nothing is written on a product until an administrator accepts it.
 | Review in bulk | **AI suggestions grid** (Catalog menu) with filters (state, field, product, locale), accept / reject per row and **bulk accept / reject**. |
 | Never overwrite a human | A suggestion is refused when the field changed since it was generated. Older pending suggestions of the same field are rejected when a new one is generated. |
 | Facts, not hallucinations | Prompts give the model the product name, categories, attributes and options as the **only facts** it may state. They never contain customer data. |
-| EU environmental claims | Generic claims ("eco-friendly", "sustainable", "écologique", "nachhaltig", "biodegradable", "carbon neutral"...) not backed by a product attribute are **removed** (or only flagged), see [Legal](#legal-notes). |
-| Clean output | Plain text only (HTML through Symfony HtmlSanitizer, scripts dropped), length limits (meta description 50-160 characters, truncated on a word boundary), warnings shown on the suggestion. |
-| Know what was AI-written | **Provenance markers**: model and dates stored for each field written from a suggestion, a badge in the admin, an optional shop notice and `data-ai-*` attributes. |
-| Bulk generation | `tmonier:ai-copilot:generate --field=description --locale=en_US --only-empty` creates pending suggestions for many products (capped per run). |
+| EU environmental claims | Generic claims ("eco-friendly", "green", "energy efficient", "écologique", "nachhaltigen", "ekologicznego", "biodegradable", "carbon neutral"... with their inflections in 7 languages) not backed by an ecolabel attribute are **removed** (or only flagged); claims kept thanks to an attribute are shown to the reviewer. See [Legal](#legal-notes). |
+| Clean output | Plain text only (HTML through Symfony HtmlSanitizer: the text of any element is kept, tables and lists become lines, scripts, styles and embeds are dropped, Markdown fences removed), length limits (meta description 50-160 characters, truncated on a word boundary), warnings shown on the suggestion. |
+| Know what was AI-written | **Provenance markers**: model and dates stored for each field written from a suggestion, a badge in the admin, an optional shop notice and `data-ai-*` attributes. Texts of the demo generator are never presented as AI-generated. |
+| Bulk generation | `tmonier:ai-copilot:generate --field=description --locale=en_US --only-empty` creates pending suggestions for many products (capped per run, with a cursor to continue). |
 | Try it without an API key | The default **demo generator** assembles texts from the attributes without any AI call, clearly labelled in the admin. |
 | Integrate | `AiSuggestionAccepted` event after each accepted suggestion. |
 
@@ -145,7 +145,9 @@ tmonier_sylius_ai_catalog_copilot:
     max_products_per_run: 50        # cap of tmonier:ai-copilot:generate
     environmental_claims:
         mode: remove                # remove | flag
-        recognised_labels: []       # extra ecolabel names that substantiate a generic claim
+        recognised_labels: []       # extra recognised ecolabel names (EN ISO 14024 type I)
+        ecolabel_attributes: [ecolabel, eco_label, eu_ecolabel, environmental_label, certification, certifications]
+        biodegradable_attributes: [biodegradable, biodegradability, compostable, compostability]
     limits:                         # characters, per field
         meta_description: { min: 50, max: 160 }
         short_description: { max: 1000 }
@@ -170,8 +172,12 @@ tmonier_sylius_ai_catalog_copilot:
     bin/console tmonier:ai-copilot:generate --field=description --locale=fr_FR --source-locale=en_US --product=SHIRT_01
     ```
 
-    Products must already exist in the target locale; products with a pending suggestion for
-    the field are skipped. Review the result in the grid.
+    Products must already exist in the target locale. Products that already have a suggestion
+    for the field in the locale (pending, accepted or rejected) are skipped; add
+    `--include-processed` to regenerate the decided ones. `--only-empty` treats whitespace or
+    markup-only texts as empty, and blank source texts are skipped. When a run reaches its limit
+    it prints `--after-id=<id>` to continue with the next products. `--limit` must be a positive
+    integer (capped by `max_products_per_run`).
 
 ## Customisation
 
@@ -192,7 +198,9 @@ tmonier_sylius_ai_catalog_copilot:
     ```
 
     PHP code can use `ProvenanceProviderInterface`. A field rewritten by a human after the
-    acceptance is reported as `edited` (`data-ai-generated="false"`).
+    acceptance is reported as `edited` (`data-ai-generated="false"`); line endings and
+    surrounding whitespace do not count as an edit. Texts of the demo generator are reported
+    with `data-ai-generator="demo"` and `data-ai-generated="false"`, and never get the shop notice.
 - **Events**: listen to `Tmonier\SyliusAiCatalogCopilotPlugin\Event\AiSuggestionAccepted`
   (suggestion, product, previous text, new text, administrator), dispatched after the flush.
 
@@ -222,10 +230,14 @@ Both are optional: this plugin depends on neither.
   "biodegradable"...) are banned unless the product has a recognised excellent environmental
   performance (EU Ecolabel, an EN ISO 14024 type I ecolabel...), and claims of climate
   neutrality based on offsetting are banned. The prompts forbid such claims and the content
-  guard removes the unsubstantiated ones in seven languages. A generic claim is kept only when a
-  product attribute names a recognised ecolabel (e.g. an attribute *Certification: EU Ecolabel*),
-  "biodegradable" only when an attribute states it; carbon or climate neutrality is always removed.
-  This is a keyword list, not an understanding of the text: review every suggestion. National
+  guard removes the unsubstantiated ones in seven languages (stems with their inflections).
+  A generic claim is kept only when one of the `ecolabel_attributes` has a positive value naming
+  a recognised label (e.g. *Certification: EU Ecolabel*; "no", "none", "pending"... never count),
+  "biodegradable" only when one of the `biodegradable_attributes` has a positive value; carbon or
+  climate neutrality and offsetting claims are always removed. Colour words ("green", "vert",
+  "grün"...) count as claims unless an attribute gives that colour. A kept claim is shown to the
+  reviewer with the attribute that supports it. This is a keyword list, not an understanding of
+  the text: review every suggestion. National
   transpositions vary (France was still discussing it in October 2026).
 - **Data protection**: prompts contain catalog data only, never customer data. Your provider's
   terms still apply to the product data you send; a self-hosted model avoids sending it.
@@ -244,7 +256,8 @@ Both are optional: this plugin depends on neither.
 ## Development
 
 ```bash
-docker compose up -d mysql mailhog   # host ports in compose.override.yml
+cp compose.override.dist.yml compose.override.yml   # publishes MySQL on 3306 and MailHog on 8025; change the ports if needed
+docker compose up -d mysql mailhog
 composer install
 (cd vendor/sylius/test-application && yarn install && yarn build)
 vendor/bin/console doctrine:database:create

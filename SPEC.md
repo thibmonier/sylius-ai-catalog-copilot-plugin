@@ -37,8 +37,10 @@ Symfony 6.4.
 
 Upgrade policy: Symfony AI is 0.x and publishes a minor about every month, each may break. The
 plugin pins one minor (`^0.14` = `>=0.14.0 <0.15`) and ships a new release per Symfony AI minor.
-The weekly `symfony-ai-next.yaml` workflow installs the next minor (constraint widened on the fly)
-and runs PHPStan and the tests, so breakages are seen before users hit them. The only Symfony AI
+The weekly `symfony-ai-next.yaml` workflow requires the next minor only (constraint replaced on
+the fly), checks it is really installed and runs PHPStan and the tests: a break makes the run red
+(no `continue-on-error`; the workflow is not a required check). When the next minor is not on
+Packagist yet, it reports a notice and skips the tests. The only Symfony AI
 code is `PlatformTextGenerator` (`PlatformInterface::invoke()`, `MessageBag`, `Message`,
 `DeferredResult::asText()`, token usage metadata) and its test; everything else depends on the
 plugin's own `TextGeneratorInterface`.
@@ -64,9 +66,13 @@ modified.
 
 ## 4. Generation pipeline
 
-1. `ProductFactsExtractor`: name, code, main taxon + taxons, attributes (select choices
-   translated, booleans as yes/no, dates as Y-m-d, values capped at 500 characters), options and
-   their values, in the target locale with the source locale as fallback. **No customer data.**
+1. `ProductFactsExtractor`: name, code, main taxon + taxons, attributes (one value per attribute:
+   target locale, else fallback locale, else non-translatable; attributes set only in the target
+   locale included; select choices translated, booleans as yes/no, dates as Y-m-d, values capped
+   at 500 characters, attribute codes kept for the claims guard), options with only the values
+   used by the enabled variants. Names come from the target locale, then the fallback locale.
+   Translations are read with `getTranslations()->get()`, never `getTranslation()`, which would
+   create and attach empty translations that the next flush inserts. **No customer data.**
 2. `TwigPromptBuilder`: `prompts/system.txt.twig` (language, facts-only rule, data-not-instructions
    rule, environmental claims rule, plain text, length) + `prompts/<field>.txt.twig` or
    `prompts/translate.txt.twig`, overridable under
@@ -80,16 +86,25 @@ modified.
    `GenerationFailedException`, logged on the `tmonier_ai_copilot` channel and shown as a generic
    flash.
 4. `ContentGuard`:
-   - Markdown emphasis and headings removed, HTML through Symfony HtmlSanitizer (text elements
-     blocked so their text is kept, everything else dropped with its content, e.g. `<script>`),
-     entities decoded; Sylius shop templates render descriptions escaped with `nl2br`, so the
+   - Markdown code fences, emphasis and headings removed; HTML through Symfony HtmlSanitizer with
+     `Block` as default action (any element is removed but its text kept: tables, definition
+     lists, `article`, `q`, custom tags) and an explicit drop list (script, style, template,
+     iframe, object, embed, svg, media, form controls...), raw-text elements also stripped before
+     parsing; block ends, table rows and `dt`/`dd` become line breaks; entities decoded; Sylius shop templates render descriptions escaped with `nl2br`, so the
      stored value is plain text. Meta fields become one line.
-   - `EnvironmentalClaimDetector`: generic claims in en/fr/de/es/it/nl/pl, "biodegradable" claims,
-     carbon / climate neutrality claims. Generic claims are substantiated by an attribute naming a
-     recognised ecolabel (EU Ecolabel, Blauer Engel, Nordic Swan, ... + configurable list),
-     biodegradable claims by an attribute stating biodegradability (or EN 13432); neutrality
-     claims never. Mode `remove` (default) drops the sentence (or keyword) containing the claim,
-     `flag` keeps it; both add a warning.
+   - `EnvironmentalClaimDetector`: inflection-tolerant patterns (stems + letters, whole words,
+     typographic apostrophes normalised) for the Annex I examples and their translations in
+     en/fr/de/es/it/nl/pl: generic claims (eco-friendly, green, ecological, sustainable, climate /
+     carbon friendly, energy efficient, bio-based...), "biodegradable"/"compostable", and carbon /
+     climate neutrality, net zero and offsetting ("compensated") claims. Colour words (green,
+     vert, grün, verde, groen, zielony) are claims unless an attribute value gives that colour.
+     Substantiation needs an explicit attribute with a positive value (negative or pending values
+     such as no / none / non / nein / aucun / pending never count): generic claims an
+     `ecolabel_attributes` code whose value names a recognised label (EU Ecolabel, Blauer Engel,
+     Nordic Swan... + configurable list) or an affirmative value on an attribute named after such
+     a label; "biodegradable" a `biodegradable_attributes` code; neutrality claims never. Mode
+     `remove` (default) drops the sentence (or keyword) containing the claim, `flag` keeps it;
+     both add a warning, and a substantiated claim adds a warning with its evidence.
    - Meta keywords normalised (lower case, comma separated, deduplicated).
    - Length: truncated at a word boundary (keywords: whole keywords) above the maximum, warning
      below the minimum. Defaults: description 5000, short description 1000, meta description
@@ -110,8 +125,15 @@ modified.
   client-side and needs no JavaScript.
 - Bulk actions reuse the Sylius admin `data-bulk-delete` script (selected rows copied into
   `ids[]`), 100 suggestions at most; undecidable ones are skipped and counted.
-- Provenance: marked "generated" while the field hash equals the accepted text, "edited" after a
-  human rewrite. Exposed in the admin toolbar, as `data-ai-*` attributes
+- Provenance: marked "generated" while the hash of the normalised field (CRLF/CR to LF, trimmed)
+  equals the accepted text, "edited" after a human rewrite; a form save with CRLF line endings is
+  not an edit. Demo generator texts are recorded but never reported as AI-generated
+  (`data-ai-generated="false"`, `data-ai-generator="demo"`, no shop notice, admin badge "demo
+  text").
+- Command: products by increasing id after `--after-id` (printed at the end of a full run),
+  skipping products with a pending suggestion for the field and, unless `--include-processed`,
+  with a decided one; `--only-empty` and the source check treat whitespace or markup-only texts
+  as empty; an invalid `--limit` is an error. Exposed in the admin toolbar, as `data-ai-*` attributes
   (`tmonier_ai_copilot_provenance_attributes()`), via `ProvenanceProviderInterface`, and as an
   optional shop notice under the description (hook
   `sylius_shop.product.show.content.info.overview.accordion.details`, disabled by default).
