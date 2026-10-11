@@ -147,7 +147,8 @@ final class AdminProductCopilotTest extends WebTestCase
 
         $crawler = $this->client->followRedirect();
         self::assertCount(1, $crawler->filter('[data-test-tmonier-ai-copilot-provenance="description|en_US"]'));
-        self::assertStringContainsString('AI-generated', $crawler->filter('[data-test-tmonier-ai-copilot-provenance="description|en_US"]')->text());
+        // Accepted from the demo generator: recorded, but never presented as AI-generated.
+        self::assertStringContainsString('demo text, not AI', $crawler->filter('[data-test-tmonier-ai-copilot-provenance="description|en_US"]')->text());
     }
 
     public function testSavingTheProductFormKeepsTheAiMarkingOfAnUntouchedMultiLineText(): void

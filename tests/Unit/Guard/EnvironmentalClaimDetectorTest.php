@@ -32,7 +32,7 @@ final class EnvironmentalClaimDetectorTest extends TestCase
                 ['Made of bio-based plastic.', 'bio-based', self::GENERIC],
                 ['An environmentally conscious brand.', 'environmentally conscious', self::GENERIC],
                 ['Gentle on the environment.', 'Gentle on the environment', self::GENERIC],
-                ["Nature’s friend.", "Nature's friend", self::GENERIC],
+                ['Nature’s friend.', "Nature's friend", self::GENERIC],
                 ['The bag is biodegradable.', 'biodegradable', self::BIODEGRADABLE],
                 ['A carbon-neutral delivery.', 'carbon-neutral', self::NEUTRAL],
                 ['Climate neutral shipping.', 'Climate neutral', self::NEUTRAL],

@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductVariant;
 use Sylius\Component\Core\Model\Taxon;
-use Sylius\Component\Taxonomy\Model\TaxonTranslation;
 use Sylius\Component\Product\Model\ProductAttribute;
 use Sylius\Component\Product\Model\ProductAttributeTranslation;
 use Sylius\Component\Product\Model\ProductAttributeValue;
@@ -16,6 +15,7 @@ use Sylius\Component\Product\Model\ProductOption;
 use Sylius\Component\Product\Model\ProductOptionTranslation;
 use Sylius\Component\Product\Model\ProductOptionValue;
 use Sylius\Component\Product\Model\ProductOptionValueTranslation;
+use Sylius\Component\Taxonomy\Model\TaxonTranslation;
 use Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Unit\CatalogTrait;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Facts\ProductFactsExtractor;
 

@@ -101,7 +101,7 @@ final class GenerateSuggestionsCommand extends Command
             return Command::SUCCESS;
         }
         $lastProduct = $products[array_key_last($products)];
-        $cursor = sprintf('Next run: add --after-id=%d to continue after the last product of this run.', (int) $lastProduct->getId());
+        $cursor = sprintf('Next run: add --after-id=%d to continue after the last product of this run.', self::idOf($lastProduct));
 
         if ((bool) $input->getOption('dry-run')) {
             $io->listing(array_map(static fn (ProductInterface $product): string => (string) $product->getCode(), $products));
@@ -175,7 +175,7 @@ final class GenerateSuggestionsCommand extends Command
             }
 
             foreach ($batch as $product) {
-                $afterId = (int) $product->getId();
+                $afterId = self::idOf($product);
                 $translations = $product->getTranslations();
                 $target = $translations->get($localeCode);
                 $source = null === $sourceLocaleCode ? null : $translations->get($sourceLocaleCode);
@@ -237,6 +237,13 @@ final class GenerateSuggestionsCommand extends Command
         $products = $queryBuilder->getQuery()->getResult();
 
         return $products;
+    }
+
+    private static function idOf(ProductInterface $product): int
+    {
+        $id = $product->getId();
+
+        return is_int($id) ? $id : 0;
     }
 
     /** Empty for a reader: nothing left once markup, entities and whitespace are removed. */

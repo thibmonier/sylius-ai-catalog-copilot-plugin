@@ -189,8 +189,6 @@ final class ProductFactsExtractor implements ProductFactsExtractorInterface
     /**
      * A text of a translation without creating any translation: $localeCode, then
      * $fallbackLocaleCode, then null.
-     *
-     * @param TranslatableInterface<\Sylius\Resource\Model\TranslationInterface> $translatable
      */
     private function translated(TranslatableInterface $translatable, string $getter, string $localeCode, string $fallbackLocaleCode): ?string
     {
