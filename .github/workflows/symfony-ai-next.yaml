@@ -1,0 +1,60 @@
+name: Symfony AI next minor
+
+# symfony/ai is 0.x: every minor may break. This weekly job tries the next minor
+# (constraint widened on the fly, never committed) so a release can follow it quickly.
+
+on:
+    schedule:
+        -
+            cron: "0 3 * * 1" # Every Monday at 3am
+    workflow_dispatch: ~
+
+jobs:
+    next-minor:
+        runs-on: ubuntu-latest
+        continue-on-error: true
+
+        name: "symfony/ai next minor, Sylius 2.3, PHP 8.4"
+
+        env:
+            APP_ENV: test
+
+        steps:
+            -
+                uses: actions/checkout@v4
+
+            -
+                name: Widen the symfony/ai constraints to the next minor
+                run: |
+                    current=$(jq -r '.require["symfony/ai-platform"]' composer.json | sed 's/^\^0\.//')
+                    next="^0.${current} || ^0.$((current + 1))"
+                    jq --arg next "$next" '.require["symfony/ai-platform"] = $next | .require["symfony/ai-bundle"] = $next' composer.json > composer.next.json
+                    mv composer.next.json composer.json
+                    jq '.require' composer.json
+
+            -
+                name: Build Sylius Test Application
+                uses: SyliusLabs/BuildTestAppAction@v4
+                with:
+                    e2e_js: "yes"
+                    cache_key: "${{ runner.os }}-php-8.4-symfony-ai-next-${{ hashFiles('**/composer.json') }}"
+                    cache_restore_key: "${{ runner.os }}-php-8.4-symfony-ai-next-"
+                    database: "mysql:8.4"
+                    node_version: "22.x"
+                    php_version: "8.4"
+                    sylius_version: "~2.3.0"
+                    symfony_version: "^7.4"
+
+            -
+                name: Show the installed symfony/ai version
+                run: composer show symfony/ai-platform symfony/ai-bundle
+
+            -
+                name: Run static analysis
+                run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+            -
+                name: Run PHPUnit
+                run: |
+                    vendor/bin/phpunit --colors=always --testsuite=unit
+                    vendor/bin/phpunit --colors=always --testsuite=non-unit

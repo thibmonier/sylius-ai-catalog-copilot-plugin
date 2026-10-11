@@ -35,9 +35,12 @@ jobs:
                 database: ["mysql:8.4"]
                 node: ["22.x"]
 
+                # symfony/ai requires Symfony ^7.3 || ^8.0: no Symfony 6.4 job. Composer resolves
+                # Sylius 2.2 on PHP 8.2 (Sylius 2.3 needs PHP 8.3+), and Sylius 2.2 does not support
+                # Symfony 8, so those combinations are not in the matrix.
                 include:
                     - php: "8.2"
-                      symfony: "^6.4"
+                      symfony: "^7.4"
                       sylius: "~2.2.0"
                       database: "mysql:8.4"
                       node: "22.x"
@@ -79,8 +82,6 @@ jobs:
 
             -
                 name: Run static analysis
-                # Symfony 6.4 Config builder is not typed enough for PHPStan at level max
-                if: matrix.symfony != '^6.4'
                 run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 
             -
@@ -98,6 +99,16 @@ jobs:
             -
                 name: Validate container
                 run: vendor/bin/console lint:container
+
+            -
+                name: Lint Twig and YAML
+                run: |
+                    vendor/bin/console lint:twig templates
+                    vendor/bin/console lint:yaml config translations
+
+            -
+                name: Validate the Doctrine mapping
+                run: vendor/bin/console doctrine:schema:validate --skip-sync
 
             -
                 name: Run Non-unit PHPUnit tests
