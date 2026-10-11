@@ -81,7 +81,7 @@ modified.
    `@TmonierSyliusAiCatalogCopilotPlugin`).
 3. `TextGeneratorInterface`: `PlatformTextGenerator` (Symfony AI platform service + model +
    options), `DemoTextGenerator` (deterministic, no call, English text assembled from the facts,
-   `[locale] source` for translations, one product out of three gets "eco-friendly" to
+   `[locale] source` for translations, one product out of three gets "eco-friendly" (flagged) and "carbon neutral" (removed) to
    demonstrate the guard), or an application service. Platform errors become
    `GenerationFailedException`, logged on the `tmonier_ai_copilot` channel and shown as a generic
    flash.

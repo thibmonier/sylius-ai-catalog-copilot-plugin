@@ -42,7 +42,7 @@ final class DemoTextGeneratorTest extends TestCase
         foreach (range(1, 30) as $index) {
             $facts = new ProductFacts('en_US', 'CODE_' . $index, 'Product');
             $text = (new DemoTextGenerator())->generate(new GenerationRequest(ProductField::DESCRIPTION, $facts, new Prompt('s', 'u')))->text;
-            $withClaim += str_contains($text, 'eco-friendly') ? 1 : 0;
+            $withClaim += str_contains($text, 'An eco-friendly choice for every day. Shipped carbon neutral.') ? 1 : 0;
         }
 
         self::assertGreaterThan(0, $withClaim);

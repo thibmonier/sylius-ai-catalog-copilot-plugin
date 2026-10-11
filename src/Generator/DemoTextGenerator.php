@@ -11,7 +11,8 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Model\ProductField;
  * from the product facts. It lets the plugin be tried (and tested) without credentials, and
  * the admin labels its suggestions as coming from the "demo generator".
  *
- * One product out of three gets a generic environmental claim, to show the content guard.
+ * One product out of three gets a generic environmental claim (flagged to the reviewer) and a
+ * carbon neutrality claim (always removed), to show the content guard.
  */
 final class DemoTextGenerator implements TextGeneratorInterface
 {
@@ -60,7 +61,7 @@ final class DemoTextGenerator implements TextGeneratorInterface
         }
 
         if (0 === crc32($facts->code) % 3) {
-            $paragraphs[] = 'An eco-friendly choice for every day.';
+            $paragraphs[] = 'An eco-friendly choice for every day. Shipped carbon neutral.';
         }
 
         return implode("\n\n", $paragraphs);
