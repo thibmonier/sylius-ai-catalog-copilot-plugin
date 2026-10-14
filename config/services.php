@@ -126,6 +126,8 @@ return static function (ContainerConfigurator $container): void {
             service('tmonier_ai_copilot.repository.ai_suggestion'),
             service('tmonier_ai_copilot.suggestion_generator'),
             service('tmonier_ai_copilot.suggestion_applier'),
+            service('limiter.tmonier_ai_copilot_per_admin')->nullOnInvalid(),
+            service('limiter.tmonier_ai_copilot_global')->nullOnInvalid(),
         ])
         ->call('setContainer', [service(\Psr\Container\ContainerInterface::class)])
         ->tag('controller.service_arguments')

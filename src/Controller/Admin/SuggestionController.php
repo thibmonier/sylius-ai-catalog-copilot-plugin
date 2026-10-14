@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Repository\AiSuggestionRepositoryInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Suggestion\SuggestionApplierInterface;
@@ -40,6 +41,8 @@ final class SuggestionController extends AbstractController
         private readonly AiSuggestionRepositoryInterface $suggestionRepository,
         private readonly SuggestionGeneratorInterface $suggestionGenerator,
         private readonly SuggestionApplierInterface $suggestionApplier,
+        private readonly ?RateLimiterFactory $perAdminLimiter = null,
+        private readonly ?RateLimiterFactory $globalLimiter = null,
     ) {
     }
 
@@ -60,6 +63,12 @@ final class SuggestionController extends AbstractController
         }
         [$field, $localeCode] = $target;
         $sourceLocaleCode = isset($target[2]) && '' !== $target[2] ? $target[2] : null;
+
+        if ($this->isRateLimited()) {
+            $this->addFlash('error', 'tmonier_ai_copilot.too_many_requests');
+
+            return $this->redirect($this->generateUrl('sylius_admin_product_update', ['id' => $id]) . '#tmonier-ai-copilot');
+        }
 
         try {
             $this->suggestionGenerator->generate($product, $field, $localeCode, $sourceLocaleCode, $this->getAdminUser());
@@ -168,6 +177,24 @@ final class SuggestionController extends AbstractController
         }
 
         return $this->redirectToRoute('tmonier_ai_copilot_admin_ai_suggestion_index');
+    }
+
+    /**
+     * Consumes one token from both the global and per-admin limiters.
+     * Returns true if either limiter is exhausted (generation must be denied).
+     */
+    private function isRateLimited(): bool
+    {
+        $limited = false;
+        if ($this->globalLimiter instanceof RateLimiterFactory) {
+            $limited = !$this->globalLimiter->create('global')->consume()->isAccepted();
+        }
+        $admin = $this->getAdminUser();
+        if ($this->perAdminLimiter instanceof RateLimiterFactory && $admin instanceof AdminUserInterface) {
+            return !$this->perAdminLimiter->create('admin_' . $admin->getUserIdentifier())->consume()->isAccepted() || $limited;
+        }
+
+        return $limited;
     }
 
     private function getAdminUser(): ?AdminUserInterface

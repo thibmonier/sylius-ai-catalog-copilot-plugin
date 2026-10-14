@@ -34,6 +34,14 @@ trait CopilotTestTrait
         $this->client = self::createClient();
         $this->client->disableReboot();
         $this->connection()->beginTransaction();
+
+        // The rate-limiter pool lives in the filesystem (outside the DB transaction).
+        // Clear it on every test setUp so that rate-limit state from one test cannot
+        // affect another, regardless of test execution order.
+        $pool = self::getContainer()->get('cache.tmonier_ai_copilot_limiter');
+        if ($pool instanceof \Psr\Cache\CacheItemPoolInterface) {
+            $pool->clear();
+        }
     }
 
     private function tearDownClient(): void

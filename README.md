@@ -173,6 +173,34 @@ tmonier_sylius_ai_catalog_copilot:
     provenance:
         enabled: true               # record which fields come from accepted AI suggestions
         shop_notice: false          # show "written with AI" under the shop product description
+    rate_limit:
+        enabled: true               # limit AI generation calls from the admin UI (symfony/rate-limiter)
+        per_admin: 30               # maximum generations per admin user per interval
+        global: 300                 # maximum generations across all admins per interval
+        interval: '1 hour'          # sliding-window interval
+        cache_pool: cache.rate_limiter  # cache pool for rate-limiter state
+```
+
+The rate limiter uses two independent sliding-window counters: one per admin user (keyed by
+`getUserIdentifier()`) and one global (keyed `'global'`). Both tokens are consumed on every
+generation; if either counter is exhausted the request is denied with a flash error and the
+product page is reloaded — nothing is generated. The admin can retry once their quota refills.
+Set `enabled: false` if your infrastructure already throttles these routes, or if you run the
+plugin in a context without a persistent cache (the CLI command is never rate-limited).
+
+The `cache.rate_limiter` pool comes from Symfony's Rate Limiter component defaults. To use a
+dedicated pool (recommended in production):
+
+```yaml
+framework:
+    cache:
+        pools:
+            cache.my_copilot_limiter:
+                adapter: cache.adapter.redis  # or filesystem, apcu…
+
+tmonier_sylius_ai_catalog_copilot:
+    rate_limit:
+        cache_pool: cache.my_copilot_limiter
 ```
 
 ## Usage

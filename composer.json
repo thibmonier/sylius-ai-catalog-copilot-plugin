@@ -20,7 +20,9 @@
         "sylius/sylius": "^2.2",
         "symfony/ai-bundle": "^0.14",
         "symfony/ai-platform": "^0.14",
-        "symfony/html-sanitizer": "^7.4 || ^8.0"
+        "symfony/html-sanitizer": "^7.4 || ^8.0",
+        "symfony/lock": "^6.4 || ^7.4 || ^8.0",
+        "symfony/rate-limiter": "^6.4 || ^7.4 || ^8.0"
     },
     "require-dev": {
         "nyholm/psr7": "^1.8",
