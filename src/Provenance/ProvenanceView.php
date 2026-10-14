@@ -6,7 +6,7 @@ namespace Tmonier\SyliusAiCatalogCopilotPlugin\Provenance;
 
 use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\DemoTextGenerator;
 
-final class ProvenanceView
+final readonly class ProvenanceView
 {
     /** The field still holds the accepted AI text. */
     public const STATUS_GENERATED = 'generated';
@@ -15,13 +15,13 @@ final class ProvenanceView
     public const STATUS_EDITED = 'edited';
 
     public function __construct(
-        public readonly string $field,
-        public readonly string $localeCode,
-        public readonly string $status,
-        public readonly string $generator,
-        public readonly string $model,
-        public readonly \DateTimeImmutable $generatedAt,
-        public readonly \DateTimeImmutable $acceptedAt,
+        public string $field,
+        public string $localeCode,
+        public string $status,
+        public string $generator,
+        public string $model,
+        public \DateTimeImmutable $generatedAt,
+        public \DateTimeImmutable $acceptedAt,
     ) {
     }
 

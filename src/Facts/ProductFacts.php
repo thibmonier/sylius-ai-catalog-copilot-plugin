@@ -7,7 +7,7 @@ namespace Tmonier\SyliusAiCatalogCopilotPlugin\Facts;
 /**
  * The only facts a prompt may use about a product: catalog data, never customer data.
  */
-final class ProductFacts
+final readonly class ProductFacts
 {
     /**
      * @param list<string> $taxons main taxon first
@@ -15,12 +15,12 @@ final class ProductFacts
      * @param list<array{name: string, values: list<string>}> $options
      */
     public function __construct(
-        public readonly string $localeCode,
-        public readonly string $code,
-        public readonly string $name,
-        public readonly array $taxons = [],
-        public readonly array $attributes = [],
-        public readonly array $options = [],
+        public string $localeCode,
+        public string $code,
+        public string $name,
+        public array $taxons = [],
+        public array $attributes = [],
+        public array $options = [],
     ) {
     }
 }

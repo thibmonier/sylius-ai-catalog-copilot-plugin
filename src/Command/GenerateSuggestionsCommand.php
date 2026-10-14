@@ -101,7 +101,7 @@ final class GenerateSuggestionsCommand extends Command
             return Command::SUCCESS;
         }
         $lastProduct = $products[array_key_last($products)];
-        $cursor = sprintf('Next run: add --after-id=%d to continue after the last product of this run.', self::idOf($lastProduct));
+        $cursor = sprintf('Next run: add --after-id=%d to continue after the last product of this run.', $this->idOf($lastProduct));
 
         if ((bool) $input->getOption('dry-run')) {
             $io->listing(array_map(static fn (ProductInterface $product): string => (string) $product->getCode(), $products));
@@ -175,14 +175,14 @@ final class GenerateSuggestionsCommand extends Command
             }
 
             foreach ($batch as $product) {
-                $afterId = self::idOf($product);
+                $afterId = $this->idOf($product);
                 $translations = $product->getTranslations();
                 $target = $translations->get($localeCode);
                 $source = null === $sourceLocaleCode ? null : $translations->get($sourceLocaleCode);
-                if ($onlyEmpty && $target instanceof ProductTranslationInterface && !self::isBlank(ProductField::getValue($target, $field))) {
+                if ($onlyEmpty && $target instanceof ProductTranslationInterface && !$this->isBlank(ProductField::getValue($target, $field))) {
                     continue;
                 }
-                if (null !== $sourceLocaleCode && (!$source instanceof ProductTranslationInterface || self::isBlank(ProductField::getValue($source, $field)))) {
+                if (null !== $sourceLocaleCode && (!$source instanceof ProductTranslationInterface || $this->isBlank(ProductField::getValue($source, $field)))) {
                     continue;
                 }
 
@@ -239,7 +239,7 @@ final class GenerateSuggestionsCommand extends Command
         return $products;
     }
 
-    private static function idOf(ProductInterface $product): int
+    private function idOf(ProductInterface $product): int
     {
         $id = $product->getId();
 
@@ -247,7 +247,7 @@ final class GenerateSuggestionsCommand extends Command
     }
 
     /** Empty for a reader: nothing left once markup, entities and whitespace are removed. */
-    private static function isBlank(?string $text): bool
+    private function isBlank(?string $text): bool
     {
         if (null === $text) {
             return true;

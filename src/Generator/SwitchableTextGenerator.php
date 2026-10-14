@@ -11,12 +11,12 @@ use Psr\Container\ContainerInterface;
  * (e.g. TMONIER_AI_GENERATOR=demo|platform). The platform generator is only created when
  * used, so the demo mode never needs the provider credentials.
  */
-final class SwitchableTextGenerator implements TextGeneratorInterface
+final readonly class SwitchableTextGenerator implements TextGeneratorInterface
 {
     public function __construct(
-        private readonly string $type,
-        private readonly TextGeneratorInterface $demoGenerator,
-        private readonly ContainerInterface $platformGenerators,
+        private string $type,
+        private TextGeneratorInterface $demoGenerator,
+        private ContainerInterface $platformGenerators,
     ) {
     }
 

@@ -21,7 +21,7 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Model\ProductField;
  *
  * @phpstan-import-type Warning from \Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface
  */
-final class ContentGuard implements ContentGuardInterface
+final readonly class ContentGuard implements ContentGuardInterface
 {
     public const CLAIMS_REMOVE = 'remove';
 
@@ -34,15 +34,15 @@ final class ContentGuard implements ContentGuardInterface
         'picture', 'script', 'select', 'source', 'style', 'svg', 'template', 'textarea', 'title', 'track', 'video',
     ];
 
-    private readonly HtmlSanitizerInterface $sanitizer;
+    private HtmlSanitizerInterface $sanitizer;
 
     public function __construct(
-        private readonly EnvironmentalClaimDetector $claimDetector,
-        private readonly FieldLimits $limits,
-        private readonly string $claimsMode = self::CLAIMS_FLAG,
+        private EnvironmentalClaimDetector $claimDetector,
+        private FieldLimits $limits,
+        private string $claimsMode = self::CLAIMS_FLAG,
         ?HtmlSanitizerInterface $sanitizer = null,
     ) {
-        if (null === $sanitizer) {
+        if (!$sanitizer instanceof \Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface) {
             $config = (new HtmlSanitizerConfig())->defaultAction(HtmlSanitizerAction::Block);
             foreach (self::DROPPED_ELEMENTS as $element) {
                 $config = $config->dropElement($element);

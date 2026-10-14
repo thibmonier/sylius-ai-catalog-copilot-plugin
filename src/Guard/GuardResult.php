@@ -7,12 +7,12 @@ namespace Tmonier\SyliusAiCatalogCopilotPlugin\Guard;
 /**
  * @phpstan-import-type Warning from \Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface
  */
-final class GuardResult
+final readonly class GuardResult
 {
     /** @param list<Warning> $warnings */
     public function __construct(
-        public readonly string $text,
-        public readonly array $warnings = [],
+        public string $text,
+        public array $warnings = [],
     ) {
     }
 }

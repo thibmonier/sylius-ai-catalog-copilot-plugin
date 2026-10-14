@@ -22,22 +22,22 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Model\ProductField;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Prompt\PromptBuilderInterface;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Repository\AiSuggestionRepositoryInterface;
 
-final class SuggestionGenerator implements SuggestionGeneratorInterface
+final readonly class SuggestionGenerator implements SuggestionGeneratorInterface
 {
     /**
      * @param FactoryInterface<AiSuggestionInterface> $suggestionFactory
      */
     public function __construct(
-        private readonly ProductFactsExtractorInterface $factsExtractor,
-        private readonly PromptBuilderInterface $promptBuilder,
-        private readonly TextGeneratorInterface $textGenerator,
-        private readonly ContentGuardInterface $contentGuard,
-        private readonly FactoryInterface $suggestionFactory,
-        private readonly AiSuggestionRepositoryInterface $suggestionRepository,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly ClockInterface $clock,
-        private readonly LoggerInterface $logger,
-        private readonly string $defaultLocaleCode,
+        private ProductFactsExtractorInterface $factsExtractor,
+        private PromptBuilderInterface $promptBuilder,
+        private TextGeneratorInterface $textGenerator,
+        private ContentGuardInterface $contentGuard,
+        private FactoryInterface $suggestionFactory,
+        private AiSuggestionRepositoryInterface $suggestionRepository,
+        private EntityManagerInterface $entityManager,
+        private ClockInterface $clock,
+        private LoggerInterface $logger,
+        private string $defaultLocaleCode,
     ) {
     }
 

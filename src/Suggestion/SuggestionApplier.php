@@ -18,18 +18,18 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Event\AiSuggestionAccepted;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Model\ProductField;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Repository\AiProvenanceRepositoryInterface;
 
-final class SuggestionApplier implements SuggestionApplierInterface
+final readonly class SuggestionApplier implements SuggestionApplierInterface
 {
     /**
      * @param FactoryInterface<AiProvenanceInterface> $provenanceFactory
      */
     public function __construct(
-        private readonly AiProvenanceRepositoryInterface $provenanceRepository,
-        private readonly FactoryInterface $provenanceFactory,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly ClockInterface $clock,
-        private readonly bool $recordProvenance = true,
+        private AiProvenanceRepositoryInterface $provenanceRepository,
+        private FactoryInterface $provenanceFactory,
+        private EntityManagerInterface $entityManager,
+        private EventDispatcherInterface $eventDispatcher,
+        private ClockInterface $clock,
+        private bool $recordProvenance = true,
     ) {
     }
 
@@ -44,7 +44,7 @@ final class SuggestionApplier implements SuggestionApplierInterface
         }
 
         $previousText = ProductField::getValue($translation, $suggestion->getField());
-        if (self::normalize($previousText) !== self::normalize($suggestion->getOriginalText())) {
+        if ($this->normalize($previousText) !== $this->normalize($suggestion->getOriginalText())) {
             throw new SuggestionException('tmonier_ai_copilot.error.stale');
         }
 
@@ -54,7 +54,7 @@ final class SuggestionApplier implements SuggestionApplierInterface
 
         if ($this->recordProvenance) {
             $provenance = $this->provenanceRepository->findOneByTranslationAndField($translation, $suggestion->getField());
-            if (null === $provenance) {
+            if (!$provenance instanceof \Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiProvenanceInterface) {
                 $provenance = $this->provenanceFactory->createNew();
                 $provenance->setTranslation($translation);
                 $this->entityManager->persist($provenance);
@@ -88,7 +88,7 @@ final class SuggestionApplier implements SuggestionApplierInterface
         }
     }
 
-    private static function normalize(?string $text): string
+    private function normalize(?string $text): string
     {
         return AiProvenance::normalize((string) $text);
     }

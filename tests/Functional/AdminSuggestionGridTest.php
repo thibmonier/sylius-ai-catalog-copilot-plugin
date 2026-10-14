@@ -166,7 +166,7 @@ final class AdminSuggestionGridTest extends WebTestCase
 
         $this->client->request('POST', '/admin/ai-suggestions/bulk/reject', [
             '_csrf_token' => $this->tokenOnPage('[data-test-tmonier-ai-copilot-bulk-reject]'),
-            'ids' => array_map(fn (AiSuggestionInterface $suggestion): int => $this->idOf($suggestion), $suggestions),
+            'ids' => array_map($this->idOf(...), $suggestions),
         ]);
 
         $this->client->followRedirect();

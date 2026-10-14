@@ -15,7 +15,7 @@ use Symfony\AI\Platform\TokenUsage\TokenUsageInterface;
  * Adapter to a Symfony AI platform (Mistral, OpenAI, Anthropic, Ollama...) configured with
  * symfony/ai-bundle. Credentials stay in the platform configuration (environment variables).
  */
-final class PlatformTextGenerator implements TextGeneratorInterface
+final readonly class PlatformTextGenerator implements TextGeneratorInterface
 {
     public const TYPE = 'platform';
 
@@ -26,10 +26,10 @@ final class PlatformTextGenerator implements TextGeneratorInterface
      *                                              being looked up in the platform model catalog
      */
     public function __construct(
-        private readonly PlatformInterface $platform,
-        private readonly string $model,
-        private readonly array $options = [],
-        private readonly ?string $modelClass = null,
+        private PlatformInterface $platform,
+        private string $model,
+        private array $options = [],
+        private ?string $modelClass = null,
     ) {
     }
 
