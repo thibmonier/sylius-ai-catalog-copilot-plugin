@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Functional;
 
-use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
 
@@ -17,6 +16,9 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
  *
  * The per_admin limit fires before the global limit when a single admin is used (3 < 6),
  * so it can be tested without needing a second admin account.
+ *
+ * CopilotTestTrait::setUpClient() clears the rate-limiter pool before every test so
+ * cross-test pollution is not possible.
  */
 final class AdminRateLimitTest extends WebTestCase
 {
@@ -25,12 +27,6 @@ final class AdminRateLimitTest extends WebTestCase
     protected function setUp(): void
     {
         $this->setUpClient();
-
-        // The rate-limiter pool lives in the filesystem, outside the DB transaction,
-        // so it must be cleared explicitly between tests to prevent cross-test pollution.
-        $pool = self::getContainer()->get('cache.tmonier_ai_copilot_limiter');
-        self::assertInstanceOf(CacheItemPoolInterface::class, $pool);
-        $pool->clear();
     }
 
     protected function tearDown(): void
