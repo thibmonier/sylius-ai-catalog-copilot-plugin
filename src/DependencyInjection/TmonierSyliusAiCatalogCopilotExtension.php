@@ -47,8 +47,13 @@ final class TmonierSyliusAiCatalogCopilotExtension extends AbstractResourceExten
 
     public function prepend(ContainerBuilder $container): void
     {
+        // Only the nodes needed here: the other values may still be unresolved env placeholders at
+        // this stage, which typed nodes reject.
         /** @var array{provenance: array{enabled: bool, shop_notice: bool}, rate_limit: array{enabled: bool, per_admin: int, global: int, interval: string, cache_pool: string}, resources: array<string, array{classes: array{model: string}}>} $config */
-        $config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()));
+        $config = $this->processConfiguration(new Configuration(), array_map(
+            static fn (array $config): array => array_intersect_key($config, ['provenance' => true, 'rate_limit' => true, 'resources' => true]),
+            $container->getExtensionConfig($this->getAlias()),
+        ));
         foreach ($config['resources'] as $name => $resource) {
             $container->setParameter(sprintf('tmonier_ai_copilot.model.%s.class', $name), $resource['classes']['model']);
         }
