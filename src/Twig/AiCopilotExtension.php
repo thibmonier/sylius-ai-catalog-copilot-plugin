@@ -44,7 +44,7 @@ final class AiCopilotExtension extends AbstractExtension
     /** @return list<AiSuggestionInterface> */
     public function pendingSuggestions(?ProductInterface $product): array
     {
-        if (null === $product || null === $product->getId()) {
+        if (!$product instanceof \Sylius\Component\Core\Model\ProductInterface || null === $product->getId()) {
             return [];
         }
 
@@ -53,13 +53,13 @@ final class AiCopilotExtension extends AbstractExtension
 
     public function provenance(?ProductInterface $product, string $field, ?string $localeCode = null): ?ProvenanceView
     {
-        return null === $product ? null : $this->provenanceProvider->get($product, $field, $localeCode);
+        return $product instanceof \Sylius\Component\Core\Model\ProductInterface ? $this->provenanceProvider->get($product, $field, $localeCode) : null;
     }
 
     /** @return array<string, ProvenanceView> */
     public function allProvenances(?ProductInterface $product, ?string $localeCode = null): array
     {
-        return null === $product ? [] : $this->provenanceProvider->all($product, $localeCode);
+        return $product instanceof \Sylius\Component\Core\Model\ProductInterface ? $this->provenanceProvider->all($product, $localeCode) : [];
     }
 
     /**
@@ -72,7 +72,7 @@ final class AiCopilotExtension extends AbstractExtension
     {
         $claims = $this->flaggedClaims($warnings, true);
         if ([] === $claims) {
-            return nl2br(self::escape($text));
+            return nl2br($this->escape($text));
         }
 
         // Claims were found on the normalised text: match hyphens, dashes, apostrophes and spaces loosely.
@@ -89,14 +89,14 @@ final class AiCopilotExtension extends AbstractExtension
         $html = '';
         foreach ($parts as $index => $part) {
             $html .= 1 === $index % 2
-                ? '<mark class="tmonier-ai-copilot-claim" data-test-tmonier-ai-copilot-claim>' . self::escape($part) . '</mark>'
-                : self::escape($part);
+                ? '<mark class="tmonier-ai-copilot-claim" data-test-tmonier-ai-copilot-claim>' . $this->escape($part) . '</mark>'
+                : $this->escape($part);
         }
 
         return nl2br($html);
     }
 
-    private static function escape(string $text): string
+    private function escape(string $text): string
     {
         return htmlspecialchars($text, \ENT_QUOTES | \ENT_HTML5, 'UTF-8');
     }
@@ -126,7 +126,7 @@ final class AiCopilotExtension extends AbstractExtension
     public function provenanceAttributes(?ProductInterface $product, string $field, ?string $localeCode = null): string
     {
         $provenance = $this->provenance($product, $field, $localeCode);
-        if (null === $provenance) {
+        if (!$provenance instanceof \Tmonier\SyliusAiCatalogCopilotPlugin\Provenance\ProvenanceView) {
             return '';
         }
 

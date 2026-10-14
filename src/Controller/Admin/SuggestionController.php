@@ -10,7 +10,6 @@ use Sylius\Component\Core\Repository\ProductRepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -47,7 +46,7 @@ final class SuggestionController extends AbstractController
     /**
      * The "target" parameter is "field|locale" or "field|locale|source locale" (translation).
      */
-    public function generateAction(Request $request, int $id): Response
+    public function generateAction(Request $request, int $id): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $product = $this->productRepository->find($id);
         if (!$product instanceof ProductInterface) {
@@ -72,7 +71,7 @@ final class SuggestionController extends AbstractController
         return $this->redirect($this->generateUrl('sylius_admin_product_update', ['id' => $id]) . '#tmonier-ai-copilot');
     }
 
-    public function decideAction(Request $request, int $id, string $decision): Response
+    public function decideAction(Request $request, int $id, string $decision): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $suggestion = $this->suggestionRepository->find($id);
         if (!$suggestion instanceof AiSuggestionInterface) {
@@ -94,7 +93,7 @@ final class SuggestionController extends AbstractController
      * Grid bulk action: "ids[]" holds the selected suggestions (copied by the Sylius admin
      * "data-bulk-delete" script). Suggestions that cannot be decided are skipped and counted.
      */
-    public function bulkDecideAction(Request $request, string $decision): Response
+    public function bulkDecideAction(Request $request, string $decision): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $this->assertCsrfToken($request, self::DECIDE_CSRF_TOKEN_ID);
 

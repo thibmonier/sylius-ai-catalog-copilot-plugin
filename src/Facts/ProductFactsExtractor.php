@@ -16,9 +16,9 @@ use Sylius\Resource\Model\TranslatableInterface;
  * Reads the catalog facts of a product. It never calls getTranslation(): on a missing locale,
  * that method creates and attaches an empty translation, which the next flush would insert.
  */
-final class ProductFactsExtractor implements ProductFactsExtractorInterface
+final readonly class ProductFactsExtractor implements ProductFactsExtractorInterface
 {
-    public function __construct(private readonly int $maxAttributeLength = 500)
+    public function __construct(private int $maxAttributeLength = 500)
     {
     }
 
@@ -66,7 +66,7 @@ final class ProductFactsExtractor implements ProductFactsExtractorInterface
             $attribute = $attributeValue->getAttribute();
             $code = $attribute?->getCode();
             $valueRank = $rank[$attributeValue->getLocaleCode() ?? ''] ?? null;
-            if (null === $attribute || null === $code || null === $valueRank) {
+            if (in_array(null, [$attribute, $code, $valueRank], true)) {
                 continue;
             }
             if (!isset($chosen[$code]) || $valueRank < $chosen[$code][0]) {

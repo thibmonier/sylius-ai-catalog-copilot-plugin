@@ -134,7 +134,7 @@ final class ProductFactsExtractorTest extends TestCase
                 $attribute = $existing->getAttribute();
             }
         }
-        if (null === $attribute) {
+        if (!$attribute instanceof \Sylius\Component\Product\Model\ProductAttribute) {
             $attribute = new ProductAttribute();
             $attribute->setCode($code);
             $attribute->setType('text');

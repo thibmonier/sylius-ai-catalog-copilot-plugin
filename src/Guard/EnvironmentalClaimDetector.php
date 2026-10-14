@@ -19,7 +19,7 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Facts\ProductFacts;
  *
  * This is a keyword list, not a semantic analysis: it reduces the risk, it is no legal advice.
  */
-final class EnvironmentalClaimDetector
+final readonly class EnvironmentalClaimDetector
 {
     public const TYPE_GENERIC = 'generic';
 
@@ -174,13 +174,13 @@ final class EnvironmentalClaimDetector
     private const COMPOSTABILITY_STANDARDS = '/(?<![\p{L}\p{N}])(?:en[\s-]*13432|en[\s-]*14995|iso[\s-]*17088|astm[\s-]*d[\s-]*6400|ok compost)(?![\p{L}\p{N}])/iu';
 
     /** @var list<string> */
-    private readonly array $recognisedLabels;
+    private array $recognisedLabels;
 
     /** @var list<string> */
-    private readonly array $ecolabelAttributes;
+    private array $ecolabelAttributes;
 
     /** @var list<string> */
-    private readonly array $biodegradableAttributes;
+    private array $biodegradableAttributes;
 
     /**
      * @param list<string> $extraRecognisedLabels
@@ -189,9 +189,9 @@ final class EnvironmentalClaimDetector
      */
     public function __construct(array $extraRecognisedLabels = [], ?array $ecolabelAttributes = null, ?array $biodegradableAttributes = null)
     {
-        $this->recognisedLabels = self::lower([...self::RECOGNISED_LABELS, ...$extraRecognisedLabels]);
-        $this->ecolabelAttributes = self::lower($ecolabelAttributes ?? self::ECOLABEL_ATTRIBUTES);
-        $this->biodegradableAttributes = self::lower($biodegradableAttributes ?? self::BIODEGRADABLE_ATTRIBUTES);
+        $this->recognisedLabels = $this->lower([...self::RECOGNISED_LABELS, ...$extraRecognisedLabels]);
+        $this->ecolabelAttributes = $this->lower($ecolabelAttributes ?? self::ECOLABEL_ATTRIBUTES);
+        $this->biodegradableAttributes = $this->lower($biodegradableAttributes ?? self::BIODEGRADABLE_ATTRIBUTES);
     }
 
     /**
@@ -230,7 +230,7 @@ final class EnvironmentalClaimDetector
         $words = preg_split('/[\s\-]+/u', mb_strtolower(self::normalize($claim))) ?: [$claim];
         $body = implode('[\s\-]*', array_map(static fn (string $word): string => preg_quote($word, '/'), $words));
 
-        return 1 === preg_match(self::wrap($body), self::normalize($text));
+        return 1 === preg_match($this->wrap($body), self::normalize($text));
     }
 
     /**
@@ -261,12 +261,12 @@ final class EnvironmentalClaimDetector
         $candidates = [];
         foreach ($patterns as $type => $typePatterns) {
             foreach ($typePatterns as $pattern) {
-                if (preg_match_all(self::wrap($pattern), $text, $matches, \PREG_OFFSET_CAPTURE) > 0) {
+                if (preg_match_all($this->wrap($pattern), $text, $matches, \PREG_OFFSET_CAPTURE) > 0) {
                     foreach ($matches[0] as [$match, $offset]) {
                         if (isset($colourPhrases[$pattern]) && $this->isProductColour($match, $facts)) {
                             continue;
                         }
-                        if (in_array(mb_strtolower($match), self::BARE_ECO, true) && self::isTechnicalEco($text, $offset, strlen($match))) {
+                        if (in_array(mb_strtolower($match), self::BARE_ECO, true) && $this->isTechnicalEco($text, $offset, strlen($match))) {
                             continue;
                         }
                         $candidates[] = ['claim' => $match, 'type' => $type, 'start' => $offset, 'end' => $offset + strlen($match)];
@@ -296,7 +296,7 @@ final class EnvironmentalClaimDetector
     }
 
     /** "cancelación de eco", "cancellazione dell'eco", "Programme Eco 40-60", "mode Eco". */
-    private static function isTechnicalEco(string $text, int $offset, int $length): bool
+    private function isTechnicalEco(string $text, int $offset, int $length): bool
     {
         $before = substr($text, max(0, $offset - 20), min(20, $offset));
         $after = substr($text, $offset + $length, 20);
@@ -309,7 +309,7 @@ final class EnvironmentalClaimDetector
     {
         $productText = null;
         foreach (self::COLOUR_ROOTS as $root) {
-            if (1 !== preg_match(self::wrap($root), $claim)) {
+            if (1 !== preg_match($this->wrap($root), $claim)) {
                 continue;
             }
 
@@ -322,7 +322,7 @@ final class EnvironmentalClaimDetector
             }
 
             // Compound colour names count too: Dunkelgrün, Olivgrün, Donkergroen.
-            if (1 === preg_match(self::wrap('\p{L}*(?:' . $root . ')'), $productText)) {
+            if (1 === preg_match($this->wrap('\p{L}*(?:' . $root . ')'), $productText)) {
                 return true;
             }
         }
@@ -365,7 +365,7 @@ final class EnvironmentalClaimDetector
     private function namesRecognisedLabelAffirmatively(string $value): bool
     {
         foreach ($this->recognisedLabels as $label) {
-            if (preg_match_all(self::wrap(preg_quote($label, '/')), $value, $matches, \PREG_OFFSET_CAPTURE) > 0) {
+            if (preg_match_all($this->wrap(preg_quote($label, '/')), $value, $matches, \PREG_OFFSET_CAPTURE) > 0) {
                 foreach ($matches[0] as [, $offset]) {
                     $words = preg_split('/[^\p{L}\p{N}]+/u', substr($value, 0, $offset), -1, \PREG_SPLIT_NO_EMPTY) ?: [];
                     if (1 !== preg_match(self::NEGATION_BEFORE_LABEL, implode(' ', array_slice($words, -3)))) {
@@ -381,7 +381,7 @@ final class EnvironmentalClaimDetector
     private function namesRecognisedLabel(string $text): bool
     {
         foreach ($this->recognisedLabels as $label) {
-            if (1 === preg_match(self::wrap(preg_quote($label, '/')), $text)) {
+            if (1 === preg_match($this->wrap(preg_quote($label, '/')), $text)) {
                 return true;
             }
         }
@@ -390,7 +390,7 @@ final class EnvironmentalClaimDetector
     }
 
     /** Case-insensitive, whole words. */
-    private static function wrap(string $body): string
+    private function wrap(string $body): string
     {
         return '/(?<![\p{L}\p{N}])(?:' . $body . ')(?![\p{L}\p{N}])/iu';
     }
@@ -400,7 +400,7 @@ final class EnvironmentalClaimDetector
      *
      * @return list<string>
      */
-    private static function lower(array $values): array
+    private function lower(array $values): array
     {
         return array_values(array_unique(array_map(static fn (string $value): string => mb_strtolower(trim($value)), $values)));
     }

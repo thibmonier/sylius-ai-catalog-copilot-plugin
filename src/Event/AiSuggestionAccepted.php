@@ -11,14 +11,14 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Entity\AiSuggestionInterface;
 /**
  * Dispatched after an accepted suggestion was written on the product and flushed.
  */
-final class AiSuggestionAccepted
+final readonly class AiSuggestionAccepted
 {
     public function __construct(
-        public readonly AiSuggestionInterface $suggestion,
-        public readonly ProductInterface $product,
-        public readonly ?string $previousText,
-        public readonly string $newText,
-        public readonly ?AdminUserInterface $acceptedBy,
+        public AiSuggestionInterface $suggestion,
+        public ProductInterface $product,
+        public ?string $previousText,
+        public string $newText,
+        public ?AdminUserInterface $acceptedBy,
     ) {
     }
 }

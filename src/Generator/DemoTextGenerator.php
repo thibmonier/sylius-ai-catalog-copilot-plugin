@@ -114,7 +114,7 @@ final class DemoTextGenerator implements TextGeneratorInterface
             $lines[] = sprintf('%s: %s.', $attribute['name'], $attribute['value']);
         }
         foreach ($facts->options as $option) {
-            $lines[] = self::ucfirst(strtr($templates['available'], [
+            $lines[] = $this->ucfirst(strtr($templates['available'], [
                 '%option%' => mb_strtolower($option['name']),
                 '%values%' => implode(', ', $option['values']),
             ]));
@@ -165,7 +165,7 @@ final class DemoTextGenerator implements TextGeneratorInterface
         return implode(', ', array_slice($keywords, 0, 10));
     }
 
-    private static function ucfirst(string $text): string
+    private function ucfirst(string $text): string
     {
         return mb_strtoupper(mb_substr($text, 0, 1)) . mb_substr($text, 1);
     }

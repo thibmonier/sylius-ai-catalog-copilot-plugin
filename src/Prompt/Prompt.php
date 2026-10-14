@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusAiCatalogCopilotPlugin\Prompt;
 
-final class Prompt
+final readonly class Prompt
 {
     public function __construct(
-        public readonly string $system,
-        public readonly string $user,
+        public string $system,
+        public string $user,
     ) {
     }
 

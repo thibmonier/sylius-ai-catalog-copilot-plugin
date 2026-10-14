@@ -13,13 +13,13 @@ use Twig\Environment;
  * Renders the prompts from Twig templates, overridable in the application under
  * templates/bundles/TmonierSyliusAiCatalogCopilotPlugin/prompts/.
  */
-final class TwigPromptBuilder implements PromptBuilderInterface
+final readonly class TwigPromptBuilder implements PromptBuilderInterface
 {
     public const TEMPLATE_PREFIX = '@TmonierSyliusAiCatalogCopilotPlugin/prompts/';
 
     public function __construct(
-        private readonly Environment $twig,
-        private readonly FieldLimits $limits,
+        private Environment $twig,
+        private FieldLimits $limits,
     ) {
     }
 

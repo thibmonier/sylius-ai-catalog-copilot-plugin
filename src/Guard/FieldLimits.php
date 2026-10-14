@@ -10,7 +10,7 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Model\ProductField;
  * Length limits (in characters) of each field. The meta description defaults to 50-160
  * characters, the size search engines display; meta keywords fit the 255 characters column.
  */
-final class FieldLimits
+final readonly class FieldLimits
 {
     public const DEFAULTS = [
         ProductField::DESCRIPTION => ['min' => 0, 'max' => 5000],
@@ -20,7 +20,7 @@ final class FieldLimits
     ];
 
     /** @var array<string, array{min: int, max: int}> */
-    private readonly array $limits;
+    private array $limits;
 
     /** @param array<string, array{min?: int, max?: int}> $limits */
     public function __construct(array $limits = [])
