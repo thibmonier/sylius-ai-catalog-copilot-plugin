@@ -36,7 +36,15 @@ prompts as overridable Twig templates; Twig Hooks everywhere; MySQL, MariaDB and
 
 ## Screenshots
 
-Screenshots go in `docs/images/`.
+![AI suggestions grid in the Sylius admin with pending, accepted and rejected suggestions, bulk accept/reject and environmental claim warnings](docs/images/admin-ai-suggestions-grid.jpg)
+
+![Product edit page, Translations tab, with the AI copilot toolbar under the English translation](docs/images/admin-product-copilot-toolbar.jpg)
+
+![Pending AI suggestions card on the product edit page with Compare, Accept and Reject actions](docs/images/admin-product-pending-suggestions.jpg)
+
+![Side-by-side review of a description suggestion flagging an unsubstantiated "eco-friendly" environmental claim](docs/images/admin-ai-suggestion-review.jpg)
+
+![Accepted suggestion after review: success message, decision date and reviewer](docs/images/admin-ai-suggestion-accepted.jpg)
 
 ## Requirements
 
