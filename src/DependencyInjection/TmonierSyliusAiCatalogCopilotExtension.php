@@ -12,6 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\PlatformTextGenerator;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\SwitchableTextGenerator;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\TextGeneratorInterface;
@@ -22,7 +23,7 @@ final class TmonierSyliusAiCatalogCopilotExtension extends AbstractResourceExten
 
     public function load(array $configs, ContainerBuilder $container): void
     {
-        /** @var array{generator: array{type: string, platform: ?string, model: ?string, model_class: ?string, options: array<string, mixed>, service: ?string}, source_locale: ?string, max_products_per_run: int, environmental_claims: array{mode: string, recognised_labels: array<string>, ecolabel_attributes: array<string>, biodegradable_attributes: array<string>}, limits: array<string, array{min?: int, max?: int}>, provenance: array{enabled: bool, shop_notice: bool}, driver: string, resources: array<string, mixed>} $config */
+        /** @var array{generator: array{type: string, platform: ?string, model: ?string, model_class: ?string, options: array<string, mixed>, service: ?string}, source_locale: ?string, max_products_per_run: int, environmental_claims: array{mode: string, recognised_labels: array<string>, ecolabel_attributes: array<string>, biodegradable_attributes: array<string>}, limits: array<string, array{min?: int, max?: int}>, provenance: array{enabled: bool, shop_notice: bool}, rate_limit: array{enabled: bool, per_admin: int, global: int, interval: string, cache_pool: string}, driver: string, resources: array<string, mixed>} $config */
         $config = $this->processConfiguration(new Configuration(), $configs);
 
         $this->registerResources('tmonier_ai_copilot', $config['driver'], $config['resources'], $container);
@@ -46,10 +47,27 @@ final class TmonierSyliusAiCatalogCopilotExtension extends AbstractResourceExten
 
     public function prepend(ContainerBuilder $container): void
     {
-        /** @var array{provenance: array{enabled: bool, shop_notice: bool}, resources: array<string, array{classes: array{model: string}}>} $config */
+        /** @var array{provenance: array{enabled: bool, shop_notice: bool}, rate_limit: array{enabled: bool, per_admin: int, global: int, interval: string, cache_pool: string}, resources: array<string, array{classes: array{model: string}}>} $config */
         $config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()));
         foreach ($config['resources'] as $name => $resource) {
             $container->setParameter(sprintf('tmonier_ai_copilot.model.%s.class', $name), $resource['classes']['model']);
+        }
+
+        if ($config['rate_limit']['enabled'] && class_exists(RateLimiterFactory::class)) {
+            $limiter = static fn (int $limit): array => [
+                'policy' => 'sliding_window',
+                'limit' => $limit,
+                'interval' => $config['rate_limit']['interval'],
+                'cache_pool' => $config['rate_limit']['cache_pool'],
+                // Without a lock, parallel requests read the same count and all get through.
+                'lock_factory' => 'lock.factory',
+            ];
+            // The default lock store (flock) unless the application configures the lock component.
+            $container->prependExtensionConfig('framework', ['lock' => ['enabled' => true, 'resources' => ['default' => ['flock']]]]);
+            $container->prependExtensionConfig('framework', ['rate_limiter' => [
+                'tmonier_ai_copilot_per_admin' => $limiter($config['rate_limit']['per_admin']),
+                'tmonier_ai_copilot_global' => $limiter($config['rate_limit']['global']),
+            ]]);
         }
 
         $container->prependExtensionConfig('doctrine', [

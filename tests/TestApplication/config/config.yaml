@@ -46,6 +46,20 @@ tmonier_sylius_ai_catalog_copilot:
             temperature: 0.3
     provenance:
         shop_notice: true
+    rate_limit:
+        # Low limits so that functional tests can trigger the cap without making hundreds of requests.
+        # per_admin=3 fires before global=6 when a single admin is used (3 < 6).
+        per_admin: 3
+        global: 6
+        cache_pool: cache.tmonier_ai_copilot_limiter
+
+framework:
+    cache:
+        pools:
+            # Filesystem pool cleared in every functional test setUp — an array pool would reset
+            # between requests and never accumulate across them.
+            cache.tmonier_ai_copilot_limiter:
+                adapter: cache.adapter.filesystem
 
 sylius_fixtures:
     suites:
