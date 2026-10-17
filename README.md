@@ -1,5 +1,7 @@
 # Sylius AI Catalog Copilot Plugin
 
+> Français : [README.fr.md](README.fr.md) <!-- vitrine:lang -->
+
 [![Build](https://github.com/thibmonier/sylius-ai-catalog-copilot-plugin/actions/workflows/build.yaml/badge.svg)](https://github.com/thibmonier/sylius-ai-catalog-copilot-plugin/actions/workflows/build.yaml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -370,6 +372,14 @@ Each click is one paid API call (a few hundred to a few thousand tokens). Only c
 sent to Anthropic: product name and code, categories, attributes, options and, for a
 translation, the source text; never customer data. Remove the lines (or set
 `TMONIER_AI_GENERATOR=demo`) and clear the cache to go back to the demo generator.
+
+<!-- vitrine:demo-b2b:start -->
+## B2B demo
+
+This plugin is used in the [Sylius B2B demo](https://github.com/thibmonier/sylius-b2b-demo): a Sylius 2.3 shop with fictitious sample data where the B2B plugins work together. The source code, setup and fixtures of the demo are in that repository.
+
+The demo is an example, not a production setup.
+<!-- vitrine:demo-b2b:end -->
 
 ## License
 
