@@ -11,9 +11,14 @@ on:
             cron: "0 3 * * 1" # Every Monday at 3am
     workflow_dispatch: ~
 
+# No default token permission: every job asks for what it needs (US-209).
+permissions: {}
+
 jobs:
     next-minor:
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
 
         name: "symfony/ai next minor, Sylius 2.3, PHP 8.4"
 
@@ -22,7 +27,9 @@ jobs:
 
         steps:
             -
-                uses: actions/checkout@v4
+                uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+                with:
+                    persist-credentials: false
 
             -
                 name: Find the next symfony/ai minor
@@ -41,8 +48,10 @@ jobs:
             -
                 name: Require the next minor only
                 if: steps.next.outputs.available == 'true'
+                env:
+                    NEXT_VERSION: ${{ steps.next.outputs.version }}
                 run: |
-                    next="^${{ steps.next.outputs.version }}"
+                    next="^${NEXT_VERSION}"
                     jq --arg next "$next" '.require["symfony/ai-platform"] = $next | .require["symfony/ai-bundle"] = $next' composer.json > composer.next.json
                     mv composer.next.json composer.json
                     jq '.require' composer.json
@@ -50,7 +59,7 @@ jobs:
             -
                 name: Build Sylius Test Application
                 if: steps.next.outputs.available == 'true'
-                uses: SyliusLabs/BuildTestAppAction@v4
+                uses: SyliusLabs/BuildTestAppAction@c3b108b5f3c299c55f429a8cf0ed88734d4f4979 # v4.3.1
                 with:
                     e2e_js: "yes"
                     cache_key: "${{ runner.os }}-php-8.4-symfony-ai-next-${{ hashFiles('**/composer.json') }}"
@@ -62,11 +71,18 @@ jobs:
                     symfony_version: "^7.4"
 
             -
+                name: Audit of the PHP dependencies
+                if: steps.next.outputs.available == 'true'
+                run: composer audit --abandoned=report
+
+            -
                 name: Check that the next minor is installed
                 if: steps.next.outputs.available == 'true'
+                env:
+                    NEXT_VERSION: ${{ steps.next.outputs.version }}
                 run: |
                     composer show symfony/ai-platform symfony/ai-bundle
-                    composer show symfony/ai-platform --format=json | jq -e --arg prefix "v${{ steps.next.outputs.version }}." '.versions[0] | startswith($prefix)'
+                    composer show symfony/ai-platform --format=json | jq -e --arg prefix "v${NEXT_VERSION}." '.versions[0] | startswith($prefix)'
 
             -
                 name: Run static analysis
