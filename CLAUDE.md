@@ -43,7 +43,7 @@ Local env overrides (gitignored): `compose.override.yml` (MySQL published on 332
 ## Rules
 
 - Never call a real AI service in tests, CI or the dev env. Fake at the `TextGeneratorInterface`
-  level; use `Symfony\AI\Platform\Test\InMemoryPlatform` only for the adapter test.
+  level; use `Symfony\AI\Platform\Test\MockPlatformFactory` only for the adapter test.
 - Never write on a product without an explicit acceptance; never inject values into the product
   form (Live Component) client-side.
 - Prompts contain catalog data only, never customer data. Keep the rules of `system.txt.twig`.

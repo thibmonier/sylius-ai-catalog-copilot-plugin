@@ -6,12 +6,9 @@ namespace Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Unit\Generator;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\AI\Platform\Bridge\Anthropic\Claude;
-use Symfony\AI\Platform\Message\MessageBag;
-use Symfony\AI\Platform\Message\SystemMessage;
-use Symfony\AI\Platform\Message\UserMessage;
 use Symfony\AI\Platform\Model;
 use Symfony\AI\Platform\Result\TextResult;
-use Symfony\AI\Platform\Test\InMemoryPlatform;
+use Symfony\AI\Platform\Test\MockPlatformFactory;
 use Symfony\AI\Platform\TokenUsage\TokenUsage;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Facts\ProductFacts;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Generator\GenerationFailedException;
@@ -21,14 +18,14 @@ use Tmonier\SyliusAiCatalogCopilotPlugin\Model\ProductField;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Prompt\Prompt;
 
 /**
- * Adapter test against the Symfony AI InMemoryPlatform: no network, no real AI service.
+ * Adapter test against the Symfony AI mock platform (MockPlatformFactory): no network, no real AI service.
  */
 final class PlatformTextGeneratorTest extends TestCase
 {
     public function testItSendsTheSystemAndUserMessagesToTheConfiguredModel(): void
     {
         $calls = [];
-        $platform = new InMemoryPlatform(static function (Model $model, array|string|object $input, array $options) use (&$calls): string {
+        $platform = MockPlatformFactory::createPlatform(static function (Model $model, array|string|object $input, array $options) use (&$calls): string {
             $calls[] = [$model->getName(), $input, $options];
 
             return '  A soft cotton shirt.  ';
@@ -43,19 +40,21 @@ final class PlatformTextGeneratorTest extends TestCase
         [$model, $input, $options] = $calls[0];
         self::assertSame('mistral-small-latest', $model);
         self::assertSame(['temperature' => 0.2], $options);
-        self::assertInstanceOf(MessageBag::class, $input);
-        $messages = $input->getMessages();
-        self::assertCount(2, $messages);
-        self::assertInstanceOf(SystemMessage::class, $messages[0]);
-        self::assertInstanceOf(UserMessage::class, $messages[1]);
-        self::assertSame('You write product content.', (string) $messages[0]->getContent());
-        self::assertSame('Describe the shirt.', $messages[1]->asText());
+        // The mock platform receives the payload already normalized by the Symfony AI contract.
+        self::assertIsArray($input);
+        self::assertSame(
+            [
+                ['role' => 'system', 'content' => 'You write product content.'],
+                ['role' => 'user', 'content' => 'Describe the shirt.'],
+            ],
+            $input['messages'],
+        );
         self::assertSame('platform', (new PlatformTextGenerator($platform, 'm'))->getType());
     }
 
     public function testItReadsTheTokenUsage(): void
     {
-        $platform = new InMemoryPlatform(static function (): TextResult {
+        $platform = MockPlatformFactory::createPlatform(static function (): TextResult {
             $result = new TextResult('A soft cotton shirt.');
             $result->getMetadata()->add('token_usage', new TokenUsage(promptTokens: 120, completionTokens: 30));
 
@@ -70,7 +69,7 @@ final class PlatformTextGeneratorTest extends TestCase
 
     public function testPlatformErrorsBecomeGenerationFailures(): void
     {
-        $platform = new InMemoryPlatform(static function (): string {
+        $platform = MockPlatformFactory::createPlatform(static function (): string {
             throw new \RuntimeException('HTTP 401');
         });
 
@@ -83,7 +82,7 @@ final class PlatformTextGeneratorTest extends TestCase
     public function testAModelClassLetsAModelMissingFromTheCatalogBeUsed(): void
     {
         $received = null;
-        $platform = new InMemoryPlatform(static function (Model $model) use (&$received): string {
+        $platform = MockPlatformFactory::createPlatform(static function (Model $model) use (&$received): string {
             $received = $model;
 
             return 'A text.';
@@ -100,7 +99,7 @@ final class PlatformTextGeneratorTest extends TestCase
     {
         $this->expectException(GenerationFailedException::class);
 
-        (new PlatformTextGenerator(new InMemoryPlatform('   '), 'llama3'))->generate($this->request());
+        (new PlatformTextGenerator(MockPlatformFactory::createPlatform('   '), 'llama3'))->generate($this->request());
     }
 
     private function request(): GenerationRequest

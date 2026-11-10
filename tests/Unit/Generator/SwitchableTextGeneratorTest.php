@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Tmonier\SyliusAiCatalogCopilotPlugin\Unit\Generator;
 
 use PHPUnit\Framework\TestCase;
-use Symfony\AI\Platform\Test\InMemoryPlatform;
+use Symfony\AI\Platform\Test\MockPlatformFactory;
 use Symfony\Component\DependencyInjection\Exception\EnvNotFoundException;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Tmonier\SyliusAiCatalogCopilotPlugin\Facts\ProductFacts;
@@ -24,7 +24,7 @@ final class SwitchableTextGeneratorTest extends TestCase
         $locator = new ServiceLocator(['platform' => static function () use (&$created): PlatformTextGenerator {
             $created = true;
 
-            return new PlatformTextGenerator(new InMemoryPlatform('AI text'), 'claude-haiku-5-5');
+            return new PlatformTextGenerator(MockPlatformFactory::createPlatform('AI text'), 'claude-haiku-5-5');
         }]);
 
         $generator = new SwitchableTextGenerator('demo', new DemoTextGenerator(), $locator);
@@ -38,7 +38,7 @@ final class SwitchableTextGeneratorTest extends TestCase
 
     public function testThePlatformModeUsesThePlatformGenerator(): void
     {
-        $locator = new ServiceLocator(['platform' => static fn (): PlatformTextGenerator => new PlatformTextGenerator(new InMemoryPlatform('AI text'), 'claude-haiku-5-5')]);
+        $locator = new ServiceLocator(['platform' => static fn (): PlatformTextGenerator => new PlatformTextGenerator(MockPlatformFactory::createPlatform('AI text'), 'claude-haiku-5-5')]);
 
         $generator = new SwitchableTextGenerator('platform', new DemoTextGenerator(), $locator);
 
