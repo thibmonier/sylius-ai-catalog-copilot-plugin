@@ -82,7 +82,7 @@ jobs:
                 env:
                     NEXT_VERSION: ${{ steps.next.outputs.version }}
                 run: |
-                    composer show symfony/ai-platform symfony/ai-bundle
+                    composer show --direct | grep "^symfony/ai-"
                     composer show symfony/ai-platform --format=json | jq -e --arg prefix "v${NEXT_VERSION}." '.versions[0] | startswith($prefix)'
 
             -
