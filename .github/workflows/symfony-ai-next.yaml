@@ -50,11 +50,12 @@ jobs:
                 if: steps.next.outputs.available == 'true'
                 env:
                     NEXT_VERSION: ${{ steps.next.outputs.version }}
+                # Every symfony/ai-* package, require-dev included: the platform bridges follow the same minor.
                 run: |
                     next="^${NEXT_VERSION}"
-                    jq --arg next "$next" '.require["symfony/ai-platform"] = $next | .require["symfony/ai-bundle"] = $next' composer.json > composer.next.json
+                    jq --arg next "$next" 'reduce ("require", "require-dev") as $s (.; if has($s) then .[$s] |= with_entries(if (.key | startswith("symfony/ai-")) then .value = $next else . end) else . end)' composer.json > composer.next.json
                     mv composer.next.json composer.json
-                    jq '.require' composer.json
+                    jq '[.require, ."require-dev" // {}] | map(with_entries(select(.key | startswith("symfony/ai-"))))' composer.json
 
             -
                 name: Build Sylius Test Application
@@ -81,7 +82,7 @@ jobs:
                 env:
                     NEXT_VERSION: ${{ steps.next.outputs.version }}
                 run: |
-                    composer show symfony/ai-platform symfony/ai-bundle
+                    composer show --direct | grep "^symfony/ai-"
                     composer show symfony/ai-platform --format=json | jq -e --arg prefix "v${NEXT_VERSION}." '.versions[0] | startswith($prefix)'
 
             -
