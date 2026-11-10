@@ -55,12 +55,12 @@ prompts as overridable Twig templates; Twig Hooks everywhere; MySQL, MariaDB and
 | PHP | 8.2+ (Sylius 2.3 needs 8.3+) |
 | Sylius | 2.2, 2.3 |
 | Symfony | 7.4, 8.0 (Symfony 8 with Sylius 2.3 only) |
-| Symfony AI | `symfony/ai-bundle` and `symfony/ai-platform` **0.14.x** |
+| Symfony AI | `symfony/ai-bundle` and `symfony/ai-platform` **0.15.x** |
 
 Symfony 6.4 is not supported: Symfony AI requires Symfony 7.3+.
 
 **Symfony AI is 0.x.** Each minor (about one a month) may break its API, so this plugin pins
-`^0.14` (>= 0.14.0, < 0.15) and a new plugin version follows each Symfony AI minor (a weekly CI
+`^0.15` (>= 0.15.0, < 0.16) and a new plugin version follows each Symfony AI minor (a weekly CI
 job tests the next one). Until Symfony AI 1.0, the plugin cannot be installed next to a package
 that pins another Symfony AI minor.
 
@@ -145,7 +145,7 @@ To use something else (a local model, a proxy, a company gateway), implement
 `generator: { type: service, service: app.my_generator }`.
 
 Models newer than the Symfony AI model catalog of the installed minor (e.g. `claude-haiku-5-5`
-with Symfony AI 0.14) are refused by the platform: set `model_class` to the bridge model class
+with Symfony AI 0.15) are refused by the platform: set `model_class` to the bridge model class
 (`Symfony\AI\Platform\Bridge\Anthropic\Claude` for Anthropic) to use any model id. The
 generator `type` can also be an environment variable (`'%env(TMONIER_AI_GENERATOR)%'`, value
 `demo` or `platform`), resolved at runtime; in `demo` mode the platform is never created. When the
@@ -347,7 +347,7 @@ vendor/bin/ecs check
 ```
 
 The test application uses the demo generator: no test, CI job or dev environment calls an AI
-service. The Symfony AI adapter is tested against Symfony AI's `InMemoryPlatform`.
+service. The Symfony AI adapter is tested against Symfony AI's `MockPlatformFactory`.
 
 
 ### Trying with a real model (Anthropic Claude)

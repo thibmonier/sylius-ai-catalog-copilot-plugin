@@ -25,18 +25,18 @@ Out of scope (v1): preview modal as a Live Component, streaming, rate limiter an
 multimodal generation (images), chatbot, automatic publication, credentials management UI,
 Symfony 6.4.
 
-## 2. Versions verified (2026-10-11)
+## 2. Versions verified (2026-11-10)
 
 | Package | Constraint | Verified |
 |---|---|---|
-| `symfony/ai-bundle` | `^0.14` | v0.14.1 (2026-09-26) is the latest; requires PHP >= 8.2, Symfony `^7.3\|^8.0`, `symfony/ai-platform ^0.14` |
-| `symfony/ai-platform` | `^0.14` | v0.14.1; `Symfony\AI\Platform\Test\InMemoryPlatform` exists |
+| `symfony/ai-bundle` | `^0.15` | v0.15.0 is the latest; resolved with `symfony/ai-platform ^0.15` |
+| `symfony/ai-platform` | `^0.15` | v0.15.0; `InMemoryPlatform` is removed, tests use `Symfony\AI\Platform\Test\MockPlatformFactory::createPlatform()` (the closure receives the payload already normalized to an array) |
 | Provider bridges | suggested | `symfony/ai-mistral-platform`, `ai-open-ai-platform`, `ai-anthropic-platform`, `ai-ollama-platform` exist on Packagist; the bundle refuses a platform config without its bridge |
 | `sylius/sylius` | `^2.2` | Composer resolves 2.3.0 on PHP 8.3+/8.5 and 2.2.10 with `platform.php = 8.2.29` (dry runs); Symfony 8 resolves with Sylius 2.3 |
 | `symfony/html-sanitizer` | `^7.4 \|\| ^8.0` | 7.4.20 |
 
 Upgrade policy: Symfony AI is 0.x and publishes a minor about every month, each may break. The
-plugin pins one minor (`^0.14` = `>=0.14.0 <0.15`) and ships a new release per Symfony AI minor.
+plugin pins one minor (`^0.15` = `>=0.15.0 <0.16`) and ships a new release per Symfony AI minor.
 The weekly `symfony-ai-next.yaml` workflow requires the next minor only (constraint replaced on
 the fly), checks it is really installed and runs PHPStan and the tests: a break makes the run red
 (no `continue-on-error`; the workflow is not a required check). When the next minor is not on
@@ -167,14 +167,14 @@ modified.
   `SwitchableTextGenerator`; the platform is created lazily, so demo mode needs no credentials).
   A platform that cannot be created (missing API key) gives a `platform_unavailable` flash.
   `model_class` builds the model object directly, so model ids newer than the Symfony AI catalog
-  (0.14 has no `claude-haiku-5-5`) can be used. Failures are logged with class and message only,
+  (0.15 may lack recent ids such as `claude-haiku-5-5`) can be used. Failures are logged with class and message only,
   never the exception object (trace arguments could carry headers). The test application wires
-  Anthropic with the bridge factory (`symfony/ai-anthropic-platform ^0.14`, v0.14.0, require-dev;
+  Anthropic with the bridge factory (`symfony/ai-anthropic-platform ^0.15`, v0.15.0, require-dev;
   ai-bundle refuses dev-only platform packages) and defaults to demo; phpunit forces demo.
 - The demo fixture `tmonier_ai_copilot_demo_suggestions` always uses the demo generator, even when
   a platform is configured, so loading fixtures never calls an AI service.
 - Tests never call an AI service: a fake at the level of `TextGeneratorInterface` and the demo
-  generator; the Symfony AI adapter is tested with `InMemoryPlatform` only. No custom
+  generator; the Symfony AI adapter is tested with `MockPlatformFactory` only. No custom
   "hash platform" against the unstable 0.x API.
 
 ## 6. Legal basis (not legal advice)
@@ -191,7 +191,7 @@ modified.
 
 ## 7. Risks
 
-- Co-installability: `^0.14` excludes packages pinned to other Symfony AI minors (e.g.
+- Co-installability: `^0.15` excludes packages pinned to other Symfony AI minors (e.g.
   `guiziweb/sylius-grid-assistant-plugin` requires `ai-platform ^0.8` and Symfony 7.3).
 - Symfony AI 0.x breaking changes (see the upgrade policy).
 - Sylius core invests in Symfony AI and MCP; competing plugins (e.g. `acseo/sylius-geo-plugin`).
@@ -202,7 +202,7 @@ modified.
 
 - https://packagist.org/packages/symfony/ai-bundle and https://repo.packagist.org/p2/symfony/ai-bundle.json
 - https://repo.packagist.org/p2/symfony/ai-platform.json
-- https://github.com/symfony/ai-platform/blob/main/src/Test/InMemoryPlatform.php
+- https://github.com/symfony/ai-platform/blob/main/src/Test/MockPlatformFactory.php
 - https://repo.packagist.org/p2/sylius/sylius.json
 - https://repo.packagist.org/p2/guiziweb/sylius-grid-assistant-plugin.json
 - https://raw.githubusercontent.com/Sylius/Sylius/v2.2.10/src/Sylius/Bundle/AdminBundle/Resources/config/app/twig_hooks/product/update.yaml
