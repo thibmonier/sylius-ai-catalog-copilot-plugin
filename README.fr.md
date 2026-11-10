@@ -347,7 +347,7 @@ vendor/bin/ecs check
 ```
 
 L'application de test utilise le générateur de démonstration : aucun test, job CI ou environnement de développement n'appelle un service
-d'IA. L'adaptateur Symfony AI est testé avec l'`MockPlatformFactory` de Symfony AI.
+d'IA. L'adaptateur Symfony AI est testé avec la fabrique `MockPlatformFactory` de Symfony AI.
 
 
 ### Essayer avec un vrai modèle (Anthropic Claude)
