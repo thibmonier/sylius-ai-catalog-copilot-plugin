@@ -55,12 +55,12 @@ prompts sous forme de templates Twig surchargeables ; Twig Hooks partout ; prise
 | PHP | 8.2+ (Sylius 2.3 exige 8.3+) |
 | Sylius | 2.2, 2.3 |
 | Symfony | 7.4, 8.0 (Symfony 8 avec Sylius 2.3 uniquement) |
-| Symfony AI | `symfony/ai-bundle` et `symfony/ai-platform` **0.14.x** |
+| Symfony AI | `symfony/ai-bundle` et `symfony/ai-platform` **0.15.x** |
 
 Symfony 6.4 n'est pas pris en charge : Symfony AI exige Symfony 7.3+.
 
 **Symfony AI est en 0.x.** Chaque version mineure (environ une par mois) peut casser son API ; ce plugin épingle donc
-`^0.14` (>= 0.14.0, < 0.15) et une nouvelle version du plugin suit chaque version mineure de Symfony AI (un job CI
+`^0.15` (>= 0.15.0, < 0.16) et une nouvelle version du plugin suit chaque version mineure de Symfony AI (un job CI
 hebdomadaire teste la suivante). Jusqu'à Symfony AI 1.0, le plugin ne peut pas être installé à côté d'un paquet
 qui épingle une autre version mineure de Symfony AI.
 
@@ -145,7 +145,7 @@ Pour utiliser autre chose (un modèle local, un proxy, une passerelle d'entrepri
 `generator: { type: service, service: app.my_generator }`.
 
 Les modèles plus récents que le catalogue de modèles de Symfony AI de la version mineure installée (par exemple `claude-haiku-5-5`
-avec Symfony AI 0.14) sont refusés par la plateforme : définissez `model_class` avec la classe de modèle du pont
+avec Symfony AI 0.15) sont refusés par la plateforme : définissez `model_class` avec la classe de modèle du pont
 (`Symfony\AI\Platform\Bridge\Anthropic\Claude` pour Anthropic) pour utiliser n'importe quel identifiant de modèle. Le
 `type` du générateur peut aussi être une variable d'environnement (`'%env(TMONIER_AI_GENERATOR)%'`, valeur
 `demo` ou `platform`), résolue à l'exécution ; en mode `demo`, la plateforme n'est jamais créée. Lorsque la
@@ -347,7 +347,7 @@ vendor/bin/ecs check
 ```
 
 L'application de test utilise le générateur de démonstration : aucun test, job CI ou environnement de développement n'appelle un service
-d'IA. L'adaptateur Symfony AI est testé avec l'`InMemoryPlatform` de Symfony AI.
+d'IA. L'adaptateur Symfony AI est testé avec l'`MockPlatformFactory` de Symfony AI.
 
 
 ### Essayer avec un vrai modèle (Anthropic Claude)
